@@ -7,6 +7,62 @@ History
 
 Datacube-ows version 1.9.x releases are designed to work with datacube-core versions 1.9.x.
 
+1.9.12 (2026-04-16)
+-------------------
+
+Multiple small changes: bug-fixes, better error handling, smaller deployment footprint,
+and ongoing maintenance/cleanup.
+
+What's Changed
+--------------
+
+* wms_utils: catch IndexError by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1521
+* Omit unnecessary pixel extaction. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1522
+* ogc: add type signatures by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1527
+* wcs1_utils: fix type error by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1528
+* update_ranges: catch IndexSetupError by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1529
+* create_app: catch config errors by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1530
+* Cleanup cfg-parser check command. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1533
+* update_ranges: conditional make_ready by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1536
+* postgis: fix diagnostic printout by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1535
+* Allow schema update operations to occur without an OWS configuration  by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1524
+* CI: fix PyPi release upload by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1538
+* Serialise access to OWSConfig singleton initialisation. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1534
+* Pass config from create_app by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1526
+* index/postgres: fix deprecation warning by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1541
+* CI: add missing characters by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1542
+* Rename update_ranges_impl by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1550
+* Remove unused dependencies by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1551
+* gunicorn_config: import prometheus locally by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1553
+* Dockerfile: switch to gthread worker by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1555
+* CI: stop persisting credentials by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1559
+* ows_configuration: forbid allowed_uris=[] by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1543
+* Use TYPE_CHECKING block for OWS by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1552
+* pyproject: add webserver optional by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1560
+* Move create_app to startup_utils by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1561
+* Prepare for 1.9.12 release by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1562
+
+Automated Updates
+-----------------
+
+* build(deps): bump astral-sh/uv from 0.11.0 to 0.11.1 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1520
+* build(deps): bump requests from 2.32.5 to 2.33.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1523
+* build(deps): bump astral-sh/uv from 0.11.1 to 0.11.2 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1525
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1531
+* build(deps): bump pygments from 2.19.2 to 2.20.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1532
+* build(deps): bump astral-sh/uv from 0.11.2 to 0.11.3 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1537
+* build(deps): bump codecov/codecov-action from 5.5.2 to 6.0.0 in the actions-deps group by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1539
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1540
+* build(deps): bump astral-sh/uv from 0.11.3 to 0.11.4 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1544
+* build(deps): bump astral-sh/uv from 0.11.4 to 0.11.5 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1547
+* build(deps): bump astral-sh/uv from 0.11.5 to 0.11.6 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1548
+* build(deps): bump the actions-deps group with 3 updates by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1554
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1556
+* build(deps): bump pillow from 12.1.1 to 12.2.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1557
+* build(deps): bump pytest from 9.0.2 to 9.0.3 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1558
+
+**Full Changelog**: https://github.com/opendatacube/datacube-ows/compare/1.9.11...1.9.12
+
 1.9.11 (2026-03-25)
 -------------------
 
