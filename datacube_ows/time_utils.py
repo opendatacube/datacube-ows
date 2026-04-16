@@ -74,10 +74,8 @@ def local_date(ds: Dataset, tz: datetime.tzinfo | None = None) -> datetime.date:
     :return: A date object.
     """
     dt_utc: datetime.datetime = dataset_center_time(ds)
-    if ds.extent is None:
-        raise ValueError("No extent found for dataset")
     if not tz:
-        tz = tz_for_geometry(ds.extent)
+        tz = tz_for_dataset(ds)
     return solar_date(dt_utc, tz)
 
 
