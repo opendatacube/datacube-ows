@@ -40,16 +40,17 @@ def dataset_center_time(dataset: Dataset) -> datetime.datetime:
     :param dataset:  An ODC dataset.
     :return: A datetime object representing the datasets center time
     """
-    center_time: datetime.datetime = dataset.center_time
     try:
         metadata_time: str = dataset.metadata_doc["extent"]["center_dt"]
-        center_time = parse(metadata_time)
+        center_time: datetime.datetime = parse(metadata_time)
     except KeyError:
         try:
             metadata_time = dataset.metadata_doc["properties"]["dtr:start_datetime"]
             center_time = parse(metadata_time)
         except KeyError:
-            pass
+            if dataset.center_time is None:
+                raise ValueError("No center_time found for dataset") from None
+            center_time = dataset.center_time
     return center_time
 
 
@@ -73,6 +74,8 @@ def local_date(ds: Dataset, tz: datetime.tzinfo | None = None) -> datetime.date:
     :return: A date object.
     """
     dt_utc: datetime.datetime = dataset_center_time(ds)
+    if ds.extent is None:
+        raise ValueError("No extent found for dataset")
     if not tz:
         tz = tz_for_geometry(ds.extent)
     return solar_date(dt_utc, tz)
@@ -85,6 +88,8 @@ def tz_for_dataset(ds: Dataset) -> datetime.tzinfo:
     :param ds: An ODC dataset object
     :return: A timezone object
     """
+    if ds.extent is None:
+        raise ValueError("No extent found for dataset")
     return tz_for_geometry(ds.extent)
 
 
