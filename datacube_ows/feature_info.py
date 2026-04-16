@@ -330,7 +330,8 @@ def feature_info(cfg: OWSConfig, args: dict[str, str]) -> FlaskResponse:
                 for ds in tds.values.item():
                     assert ds is not None and ds.time is not None  # for type checker
                     if params.layer.time_resolution.is_solar():
-                        unsorted_dates.append(ds.center_time.strftime("%Y-%m-%d"))
+                        center_time = dataset_center_time(ds)
+                        unsorted_dates.append(center_time.strftime("%Y-%m-%d"))
                     elif params.layer.time_resolution.is_subday():
                         unsorted_dates.append(ds.time.begin.isoformat())
                     else:

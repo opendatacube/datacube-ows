@@ -17,7 +17,7 @@ What's Changed
 --------------
 
 * wms_utils: catch IndexError by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1521
-* Omit unnecessary pixel extaction. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1522
+* Omit unnecessary pixel extraction. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1522
 * ogc: add type signatures by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1527
 * wcs1_utils: fix type error by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1528
 * update_ranges: catch IndexSetupError by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1529
@@ -26,7 +26,7 @@ What's Changed
 * update_ranges: conditional make_ready by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1536
 * postgis: fix diagnostic printout by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1535
 * Allow schema update operations to occur without an OWS configuration  by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1524
-* CI: fix PyPi release upload by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1538
+* CI: fix PyPI release upload by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1538
 * Serialise access to OWSConfig singleton initialisation. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1534
 * Pass config from create_app by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1526
 * index/postgres: fix deprecation warning by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1541

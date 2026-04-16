@@ -751,7 +751,9 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.bboxes: CFG_DICT = {}
         self.default_time: datetime.datetime | datetime.date | None = None
         self.band_idx = BandIndex(self, cast("CFG_DICT", cfg.get("bands")))
-        self.cfg_native_resolution = cfg.get("native_resolution")
+        self.cfg_native_resolution = cast(
+            "None | tuple[int | float, int | float]",
+            cfg.get("native_resolution"))
         self.cfg_native_crs = cast("str", cfg.get("native_crs"))
         self.declare_unready("resolution_x")
         self.declare_unready("resolution_y")
@@ -1012,7 +1014,10 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                     "main layer section if required.",
                     self.name,
                 )
-                self.cfg_native_resolution = cfg.get("native_resolution")
+                self.cfg_native_resolution = cast(
+                    "None | tuple[int | float, int | float]",
+                    cfg.get("native_resolution"),
+                )
             else:
                 _LOG.warning(
                     "Native_resolution in wcs section of layer %s ignored in favour of value in "
@@ -1116,7 +1121,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             try:
                 if self.cfg_native_resolution is None:
                     raise KeyError
-                self.resolution_x, self.resolution_y = self.cfg_native_resolution  # type: ignore[misc]
+                self.resolution_x, self.resolution_y = self.cfg_native_resolution
             except KeyError:
                 raise ConfigException(
                     f"No native resolution supplied for layer {self.name} with no product-native resolution defined in ODC."
@@ -1130,7 +1135,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                     f"Invalid native resolution supplied for layer {self.name}"
                 ) from None
         elif self.cfg_native_resolution:
-            config_x, config_y = (float(r) for r in self.cfg_native_resolution)  # type: ignore[arg-type, union-attr]
+            config_x, config_y = (float(r) for r in self.cfg_native_resolution)
             if math.isclose(
                 config_x, float(self.resolution_x), rel_tol=1e-8
             ) and math.isclose(config_y, float(self.resolution_y), rel_tol=1e-8):

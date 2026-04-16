@@ -245,6 +245,8 @@ igsekor
 img
 impl
 incrementing
+IndexError
+IndexSetupError
 init
 initdb
 integrations
@@ -332,6 +334,7 @@ ows
 owslib
 ows's
 OWS's
+OWSConfig
 OWSConfigNotReady
 palsar
 params
@@ -366,6 +369,7 @@ pycharm
 pydev
 PyDev
 pydevd
+pygments
 pylint
 pypackage
 pypi
@@ -441,6 +445,7 @@ uninverted
 unpatched
 unscaled
 uri
+uris
 url
 urllib
 urls
@@ -460,6 +465,7 @@ WCSRequest
 webmap
 webmercator
 WebMercator
+webserver
 werkzeug
 wgs
 whatnick
