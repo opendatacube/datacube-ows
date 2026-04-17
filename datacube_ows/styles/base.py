@@ -12,7 +12,6 @@ from typing import Any, cast
 
 import numpy as np
 import xarray as xr
-from flask_babel import get_locale
 from PIL import Image
 from typing_extensions import override
 
@@ -458,6 +457,8 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         if legend.legend_urls:
             locale: str | None = None
             if self.global_config().internationalised:
+                from flask_babel import get_locale
+
                 locale = get_locale().language
             if locale not in self.global_config().locales:
                 locale = self.global_config().default_locale
