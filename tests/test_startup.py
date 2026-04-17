@@ -92,21 +92,21 @@ def test_initialise_ign_warn() -> None:
 
 def test_initialise_nodebugging(monkeypatch) -> None:
     monkeypatch.setenv("PYDEV_DEBUG", "")
-    from datacube_ows.startup_utils import initialise_debugging
+    from datacube_ows.debug import initialise_debugging
 
     initialise_debugging()
 
 
 def test_initialise_explicit_nodebugging(monkeypatch) -> None:
     monkeypatch.setenv("PYDEV_DEBUG", "no")
-    from datacube_ows.startup_utils import initialise_debugging
+    from datacube_ows.debug import initialise_debugging
 
     initialise_debugging()
 
 
 def test_initialise_debugging(monkeypatch) -> None:
     monkeypatch.setenv("PYDEV_DEBUG", "YES")
-    from datacube_ows.startup_utils import initialise_debugging
+    from datacube_ows.debug import initialise_debugging
 
     fake_mod = MagicMock()
     with patch.dict("sys.modules", pydevd_pycharm=fake_mod):

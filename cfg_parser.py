@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from datacube_ows.cfg_parser_impl import main
-from datacube_ows.startup_utils import initialise_debugging
+from datacube_ows.debug import initialise_debugging
 
 if __name__ == "__main__":
     initialise_debugging()
