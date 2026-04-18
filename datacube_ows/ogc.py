@@ -12,12 +12,7 @@ from flask import render_template, request
 from sqlalchemy.exc import OperationalError
 
 from datacube_ows import __version__
-from datacube_ows.http_utils import (
-    capture_headers,
-    get_service_base_url,
-    lower_get_args,
-    resp_headers,
-)
+from datacube_ows.http_utils import capture_headers, get_service_base_url, resp_headers
 from datacube_ows.index.api import ows_index
 from datacube_ows.legend_generator import create_legend_for_style
 from datacube_ows.ogc_exceptions import OGCException, WMSException
@@ -200,3 +195,19 @@ def legend(
     if not img:
         return "Unknown Style", 404, resp_headers(cfg, {"Content-Type": "text/plain"})
     return img
+
+
+def lower_get_args() -> dict[str, str | None]:
+    """
+    Return Flask request arguments, with argument names converted to lower case.
+
+    Get parameters in WMS are case-insensitive, and intended to be single use.
+    Spec does not specify which instance should be used if a parameter is provided more than once.
+    This function uses the LAST instance.
+    """
+    d: dict[str, str | None] = {}
+    for k in request.args:
+        kl = k.lower()
+        for v in request.args.getlist(k):
+            d[kl] = v
+    return d
