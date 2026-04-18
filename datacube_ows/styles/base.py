@@ -26,7 +26,6 @@ from datacube_ows.config_utils import (
     OWSFlagBandStandalone,
     OWSMetadataConfig,
 )
-from datacube_ows.legend_utils import get_image_from_url
 from datacube_ows.ogc_exceptions import WMSException
 
 TYPE_CHECKING = False
@@ -455,6 +454,8 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         if not legend.show_legend:
             return None
         if legend.legend_urls:
+            from datacube_ows.legend_utils import get_image_from_url
+
             locale: str | None = None
             if self.global_config().internationalised:
                 from flask_babel import get_locale
