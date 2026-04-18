@@ -10,6 +10,7 @@ from decimal import Decimal
 import pytest
 
 from datacube_ows.config_utils import ConfigException
+from datacube_ows.data import xarray_image_as_png
 from datacube_ows.styles.api import (
     StandaloneStyle,
     apply_ows_style,
@@ -20,7 +21,6 @@ from datacube_ows.styles.api import (
     plot_image,
     plot_image_with_style,
     plot_image_with_style_cfg,
-    xarray_image_as_png,
 )
 
 TYPE_CHECKING = False
