@@ -12,7 +12,6 @@ from typing import Any, cast
 
 import numpy as np
 import xarray as xr
-from PIL import Image
 from typing_extensions import override
 
 from datacube_ows.config_utils import (
@@ -33,6 +32,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, MutableMapping, Sized
 
     import datacube.model
+    from PIL import Image
 
     from datacube_ows.config_utils import (
         CFG_DICT,
@@ -450,6 +450,8 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         :param dates: The number of dates to render the legend for (e.g. for delta)
         :return: A PIL Image object, or None.
         """
+        from PIL import Image
+
         legend = self.get_legend_cfg(dates)
         if not legend.show_legend:
             return None
