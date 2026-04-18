@@ -12,13 +12,14 @@ from typing import cast
 
 import numpy
 from datacube.utils.masking import mask_to_dict
+from flask import render_template
 from odc.geo import geom
 from odc.geo.crs import CRS
 from odc.geo.geobox import GeoBox
 from pandas import Timestamp
 
 from datacube_ows.config_utils import ConfigException
-from datacube_ows.http_utils import html_json_response, json_response
+from datacube_ows.http_utils import json_response
 from datacube_ows.loading import DataStacker
 from datacube_ows.time_utils import dataset_center_time
 from datacube_ows.utils import log_call
@@ -355,5 +356,6 @@ def feature_info(cfg: OWSConfig, args: dict[str, str]) -> FlaskResponse:
         ],
     }
     if params.format == "text/html":
-        return html_json_response(result, cfg)
+        html_content = render_template("html_feature_info.html", result=result)
+        return html_content, 200, cfg.response_headers({"Content-Type": "text/html"})
     return json_response(result, cfg)

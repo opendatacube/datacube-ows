@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 from urllib.parse import urlparse
 
-from flask import render_template, request
+from flask import request
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -110,11 +110,6 @@ def json_response(result: CFG_DICT, cfg: OWSConfig) -> FlaskResponse:
         200,
         cfg.response_headers({"Content-Type": "application/json"}),
     )
-
-
-def html_json_response(result: CFG_DICT, cfg: OWSConfig) -> FlaskResponse:
-    html_content = render_template("html_feature_info.html", result=result)
-    return html_content, 200, cfg.response_headers({"Content-Type": "text/html"})
 
 
 def png_response(
