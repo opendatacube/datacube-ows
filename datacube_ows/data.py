@@ -352,7 +352,7 @@ def xarray_image_as_png(
             ycoord = cc
             break
     if not xcoord or not ycoord:
-        raise Exception("Could not identify spatial coordinates")
+        raise ValueError("Could not identify spatial coordinates")
     width = len(img_data.coords[xcoord])
     height = len(img_data.coords[ycoord])
     img_io = BytesIO()
