@@ -107,12 +107,11 @@ def mv_search(
     """
     Perform a dataset query via the space_time_view
 
-    :param products: An iterable of combinable products to search
-    :param index: A datacube index (required)
-
+    :param dc: A datacube index (required)
     :param sel: Selection mode - a MVSelectOpts enum. Defaults to IDS.
     :param times: A list of pairs of datetimes (with time zone)
     :param geom: A odc.geo.geom.Geometry object
+    :param products: An iterable of combinable products to search
 
     :return: See MVSelectOpts doc
     """
