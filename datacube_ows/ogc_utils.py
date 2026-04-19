@@ -155,7 +155,7 @@ def create_geobox(
     :return: An ODC geobox object
     """
     if width is None and height is None:
-        raise Exception("Must supply at least a width or height")
+        raise ValueError("Must supply at least a width or height")
     if height is not None:
         scale_y = (float(miny) - float(maxy)) / height
     if width is not None:
