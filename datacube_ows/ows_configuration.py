@@ -1118,14 +1118,13 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             self.resolution_y = None
 
         if self.resolution_x is None:
-            try:
-                if self.cfg_native_resolution is None:
-                    raise KeyError
-                self.resolution_x, self.resolution_y = self.cfg_native_resolution
-            except KeyError:
+            if self.cfg_native_resolution is None:
                 raise ConfigException(
-                    f"No native resolution supplied for layer {self.name} with no product-native resolution defined in ODC."
-                ) from None
+                    f"No native resolution supplied for layer {self.name} with no "
+                    "product-native resolution defined in ODC."
+                )
+            try:
+                self.resolution_x, self.resolution_y = self.cfg_native_resolution
             except ValueError:
                 raise ConfigException(
                     f"Invalid native resolution supplied for layer {self.name}"
