@@ -399,12 +399,10 @@ class DataStacker:
         # pylint: disable=too-many-locals, too-many-branches
         # manual merge
         if self.style:
-            flag_bands: Iterable[str] = set(
-                filter(lambda b: b in self.style.flag_bands, bands)  # type: ignore[arg-type]
-            )
-            non_flag_bands: Iterable[str] = set(
-                filter(lambda b: b not in self.style.flag_bands, bands)  # type: ignore[arg-type]
-            )
+            flag_bands: Iterable[str] = {b for b in bands if b in self.style.flag_bands}
+            non_flag_bands: Iterable[str] = {
+                b for b in bands if b not in self.style.flag_bands
+            }
         else:
             non_flag_bands = bands
             flag_bands = set()
