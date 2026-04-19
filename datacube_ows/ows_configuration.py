@@ -1125,11 +1125,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 )
             try:
                 self.resolution_x, self.resolution_y = self.cfg_native_resolution
-            except ValueError:
-                raise ConfigException(
-                    f"Invalid native resolution supplied for layer {self.name}"
-                ) from None
-            except TypeError:
+            except (TypeError, ValueError):
                 raise ConfigException(
                     f"Invalid native resolution supplied for layer {self.name}"
                 ) from None
