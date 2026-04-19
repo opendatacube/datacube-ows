@@ -117,7 +117,7 @@ def mv_search(
     """
     stv = st_view
     if products is None:
-        raise Exception("Must filter by product/layer")
+        raise ValueError("Must filter by product/layer")
     prod_ids = [p.id for p in products]
 
     s = select(*sel.sel(stv)).where(stv.c.dataset_type_ref.in_(prod_ids))  # type: ignore[call-overload]
@@ -192,5 +192,5 @@ def mv_search(
             ids = [r[0] for r in conn.execute(s)]
         return dc.index.datasets.bulk_get(ids)
     else:
-        raise Exception("Invalid Selection Option")
+        raise ValueError(f"Invalid Selection Option: {sel}")
     raise Exception("Unreachable code reached")
