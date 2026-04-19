@@ -31,6 +31,8 @@ from datacube_ows.wcs2_utils import get_coverage_data
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from ows.gml import AxisType
+
     from datacube_ows.ows_configuration import OWSConfig
     from datacube_ows.protocol_versions import FlaskResponse
 
@@ -158,7 +160,7 @@ def get_capabilities(cfg: OWSConfig, args: dict) -> tuple[Any, int, dict]:
 
 
 def create_coverage_description(cfg: OWSConfig, product) -> CoverageDescription:
-    axes = [
+    axes: list[AxisType] = [
         RegularAxis(
             label=product.native_CRS_def["horizontal_coord"],
             index_label="i",
