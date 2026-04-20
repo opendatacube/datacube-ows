@@ -129,7 +129,7 @@ def get_coverage(cfg: OWSConfig, args: dict) -> tuple[Any, int, dict]:
         "Content-Type": req.format.mime,
         "content-disposition": f"attachment; filename={req.layer_name}.{req.format.extension}",
     }
-    headers.update(req.layer.resource_limits.wcs_cache_rules.cache_headers(n_datasets))  # type: ignore[union-attr]
+    headers.update(req.layer.resource_limits.wcs_cache_rules.cache_headers(n_datasets))
     return (
         req.format.renderer(req.version)(cfg, req, data),
         200,

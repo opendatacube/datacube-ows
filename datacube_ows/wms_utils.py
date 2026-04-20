@@ -31,6 +31,7 @@ TYPE_CHECKING = False
 if TYPE_CHECKING:
     from datetime import date
 
+    from odc.geo.crs import SomeCRS
     from odc.geo.geobox import GeoBox
 
     from datacube_ows.ows_configuration import OWSConfig, OWSNamedLayer
@@ -47,7 +48,12 @@ RESAMPLING_METHODS = {
 
 
 def _bounding_pts(
-    minx: float, miny: float, maxx: float, maxy: float, src_crs, dst_crs=None
+    minx: float,
+    miny: float,
+    maxx: float,
+    maxy: float,
+    src_crs: SomeCRS,
+    dst_crs: SomeCRS | None = None,
 ) -> tuple[float, float, float, float]:
     # pylint: disable=too-many-locals
     p1 = geom.point(minx, maxy, src_crs)
@@ -55,11 +61,10 @@ def _bounding_pts(
     p3 = geom.point(maxx, maxy, src_crs)
     p4 = geom.point(maxx, miny, src_crs)
 
-    conv = dst_crs is not None
-    gp1 = p1.to_crs(dst_crs) if conv else p1
-    gp2 = p2.to_crs(dst_crs) if conv else p2
-    gp3 = p3.to_crs(dst_crs) if conv else p3
-    gp4 = p4.to_crs(dst_crs) if conv else p4
+    gp1 = p1 if dst_crs is None else p1.to_crs(dst_crs)
+    gp2 = p2 if dst_crs is None else p2.to_crs(dst_crs)
+    gp3 = p3 if dst_crs is None else p3.to_crs(dst_crs)
+    gp4 = p4 if dst_crs is None else p4.to_crs(dst_crs)
 
     minx = min(gp1.points[0][0], gp2.points[0][0], gp3.points[0][0], gp4.points[0][0])
     maxx = max(gp1.points[0][0], gp2.points[0][0], gp3.points[0][0], gp4.points[0][0])
@@ -363,7 +368,8 @@ class GetParameters:
         self.geobox = _get_geobox(self.cfg, args, self.crs)
         # Web-merc antimeridian hack:
         if self.geobox.crs != self.crs:
-            self.crs = self.geobox.crs  # type: ignore[assignment]
+            assert self.geobox.crs is not None  # For type checker.
+            self.crs = self.geobox.crs
             self.geometry = self.geometry.to_crs(self.crs)
 
         # Time parameter

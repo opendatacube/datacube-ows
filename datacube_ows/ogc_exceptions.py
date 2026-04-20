@@ -15,6 +15,8 @@ from datacube_ows.http_utils import resp_headers
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from datacube_ows.ows_configuration import OWSConfig
     from datacube_ows.protocol_versions import FlaskResponse
 
@@ -114,7 +116,10 @@ class WCS2Exception(OGCException):
     # pylint: disable=dangerous-default-value
     @override
     def exception_response(
-        self, cfg: OWSConfig, traceback: list | None = None
+        self,
+        cfg: OWSConfig,
+        traceback: Iterable[tb.FrameSummary | tuple[str, int, str, str | None]]
+        | None = None,
     ) -> FlaskResponse:
         if traceback is None:
             traceback = []
