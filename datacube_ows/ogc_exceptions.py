@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import traceback as tb
 
-from flask import render_template
 from ows.common.types import OWSException, Version
 from ows.common.v20.encoders import xml_encode_exception_report
 from typing_extensions import override
@@ -45,6 +44,8 @@ class OGCException(Exception):
     def exception_response(
         self, cfg: OWSConfig, traceback: list | None = None
     ) -> FlaskResponse:
+        from flask import render_template
+
         return (
             render_template(
                 "ogc_error.xml",

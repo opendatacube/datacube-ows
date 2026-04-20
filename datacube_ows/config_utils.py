@@ -17,7 +17,6 @@ from urllib.parse import urlparse
 
 import fsspec
 from datacube.utils.masking import make_mask
-from flask_babel import gettext as _
 from typing_extensions import override
 
 from datacube_ows.config_toolkit import deepinherit
@@ -488,6 +487,8 @@ class OWSMetadataConfig(OWSConfigEntry):
         """
         lookup = f"{lbl}.{fld}"
         if self.global_config().internationalised:
+            from flask_babel import gettext as _
+
             trans = _(lookup)
             if trans != lookup:
                 return trans

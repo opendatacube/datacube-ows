@@ -15,10 +15,10 @@ from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from datacube_ows import __version__
 from datacube_ows.config_utils import ConfigException, OWSConfigNotReady
+from datacube_ows.debug import initialise_debugging
 from datacube_ows.index import AbortRun, ows_index
 from datacube_ows.index.api import InsufficientDbPrivileges
 from datacube_ows.ows_configuration import get_config
-from datacube_ows.startup_utils import initialise_debugging
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:

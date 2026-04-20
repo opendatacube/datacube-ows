@@ -16,5 +16,7 @@ from datacube_ows.styles.api.base import (  # noqa: F401 isort:skip
     plot_image_with_style_cfg,
 )
 
-from datacube_ows.ogc_utils import create_geobox, xarray_image_as_png  # noqa: F401 isort:skip
+from datacube_ows.data import xarray_image_as_png  # noqa: F401
+
+from datacube_ows.ogc_utils import create_geobox  # noqa: F401 isort:skip
 from datacube_ows.band_utils import scale_data, scalable, band_modulator  # noqa: F401 isort:skip

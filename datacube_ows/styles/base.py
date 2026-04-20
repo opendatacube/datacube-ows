@@ -12,8 +12,6 @@ from typing import Any, cast
 
 import numpy as np
 import xarray as xr
-from flask_babel import get_locale
-from PIL import Image
 from typing_extensions import override
 
 from datacube_ows.config_utils import (
@@ -27,7 +25,6 @@ from datacube_ows.config_utils import (
     OWSFlagBandStandalone,
     OWSMetadataConfig,
 )
-from datacube_ows.legend_utils import get_image_from_url
 from datacube_ows.ogc_exceptions import WMSException
 
 TYPE_CHECKING = False
@@ -35,6 +32,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, MutableMapping, Sized
 
     import datacube.model
+    from PIL import Image
 
     from datacube_ows.config_utils import (
         CFG_DICT,
@@ -452,12 +450,18 @@ class StyleDefBase(OWSExtensibleConfigEntry, OWSMetadataConfig):
         :param dates: The number of dates to render the legend for (e.g. for delta)
         :return: A PIL Image object, or None.
         """
+        from PIL import Image
+
         legend = self.get_legend_cfg(dates)
         if not legend.show_legend:
             return None
         if legend.legend_urls:
+            from datacube_ows.legend_utils import get_image_from_url
+
             locale: str | None = None
             if self.global_config().internationalised:
+                from flask_babel import get_locale
+
                 locale = get_locale().language
             if locale not in self.global_config().locales:
                 locale = self.global_config().default_locale

@@ -8,8 +8,6 @@ from __future__ import annotations
 import json
 from urllib.parse import urlparse
 
-from flask import render_template, request
-
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -88,33 +86,12 @@ def cache_control_headers(max_age: int) -> dict[str, str]:
     return {"cache-control": f"max-age={max_age}"}
 
 
-def lower_get_args() -> dict[str, str | None]:
-    """
-    Return Flask request arguments, with argument names converted to lower case.
-
-    Get parameters in WMS are case-insensitive, and intended to be single use.
-    Spec does not specify which instance should be used if a parameter is provided more than once.
-    This function uses the LAST instance.
-    """
-    d: dict[str, str | None] = {}
-    for k in request.args:
-        kl = k.lower()
-        for v in request.args.getlist(k):
-            d[kl] = v
-    return d
-
-
 def json_response(result: CFG_DICT, cfg: OWSConfig) -> FlaskResponse:
     return (
         json.dumps(result),
         200,
         cfg.response_headers({"Content-Type": "application/json"}),
     )
-
-
-def html_json_response(result: CFG_DICT, cfg: OWSConfig) -> FlaskResponse:
-    html_content = render_template("html_feature_info.html", result=result)
-    return html_content, 200, cfg.response_headers({"Content-Type": "text/html"})
 
 
 def png_response(

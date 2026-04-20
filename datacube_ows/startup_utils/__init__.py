@@ -15,6 +15,8 @@ from typing import Any, TypeVar
 from flask import Flask, g, request
 from sqlalchemy.exc import OperationalError
 
+from datacube_ows.debug import initialise_debugging
+
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -43,19 +45,6 @@ def initialise_ignorable_warnings() -> None:
     from rasterio.errors import NotGeoreferencedWarning
 
     warnings.simplefilter("ignore", category=NotGeoreferencedWarning)
-
-
-def initialise_debugging(log: Logger | None = None) -> None:
-    # PYCHARM Debugging
-    dbg = os.environ.get("PYDEV_DEBUG")
-    if dbg and dbg.lower() not in ("no", "false", "f", "n"):
-        import pydevd_pycharm
-
-        pydevd_pycharm.settrace(
-            "172.17.0.1", port=12321, stdout_to_server=True, stderr_to_server=True
-        )
-        if log:
-            log.info("PyCharm Debugging enabled")
 
 
 SentryEvent = TypeVar("SentryEvent")

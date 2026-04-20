@@ -12,9 +12,6 @@ from typing import cast
 import numpy
 import xarray
 from datacube.utils.masking import make_mask
-from matplotlib import patches as mpatches
-from matplotlib import pyplot as plt
-from matplotlib.colors import to_hex, to_rgba
 from typing_extensions import override
 from xarray import DataArray, Dataset
 
@@ -80,6 +77,8 @@ class AbstractValueMapRule(AbstractMaskRule):
         )
 
     def parse_color(self, cfg: CFG_DICT) -> None:
+        from matplotlib.colors import to_rgba
+
         self.color_str = cast("str", cfg["color"])
         if cfg.get("mask"):
             alpha: float | None = 0.0
@@ -307,6 +306,8 @@ def apply_value_map(
 
 class PatchTemplate:
     def __init__(self, idx: int, rule: AbstractValueMapRule) -> None:
+        from matplotlib.colors import to_hex
+
         self.idx = idx
         self.colour = to_hex(rule.rgba, keep_alpha=True)
         self.label = rule.label
@@ -338,6 +339,9 @@ class ColorMapLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
 
     @override
     def render(self, bytesio: io.BytesIO) -> None:
+        from matplotlib import patches as mpatches
+        from matplotlib import pyplot as plt
+
         patches = [
             mpatches.Patch(color=pt.colour, label=self.patch_label(pt.idx))
             for pt in self.patches

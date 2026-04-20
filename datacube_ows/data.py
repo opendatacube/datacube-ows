@@ -7,19 +7,20 @@ from __future__ import annotations
 
 import logging
 from datetime import date, datetime, timedelta
+from io import BytesIO
 from typing import Any
 
 import numpy
 import numpy.ma
 import xarray
 from pandas import Timestamp
+from PIL import Image
 from rasterio.features import rasterize
 from rasterio.io import MemoryFile
 
 from datacube_ows.http_utils import json_response, png_response
 from datacube_ows.loading import DataStacker
 from datacube_ows.ogc_exceptions import WMSException
-from datacube_ows.ogc_utils import xarray_image_as_png
 from datacube_ows.query_profiler import QueryProfiler
 from datacube_ows.resource_limits import ResourceLimited
 from datacube_ows.time_utils import solar_date, tz_for_geometry
@@ -315,3 +316,110 @@ def _write_polygon(
             for idx, fill in enumerate(zoom_fill, start=1):
                 thing.write_band(idx, data * fill)
         return memfile.read()
+
+
+def xarray_image_as_png(
+    img_data: xarray.Dataset,
+    loop_over=None,
+    animate: bool = False,
+    frame_duration: int = 1000,
+):
+    """
+    Render an Xarray image as a PNG.
+
+    :param img_data: An xarray dataset, containing 3 or 4 uint8 variables: red, green,
+                blue, and optionally alpha.
+    :param loop_over: Optional name of a dimension on img_data.  If set,
+                xarray_image_as_png is called in a loop over all coordinate values for
+                the named dimension.
+    :param animate: Optional generate animated PNG
+    :return: A list of bytes representing a PNG image file. (Or a list of lists of
+                bytes, if loop_over was set.)
+    """
+    if loop_over and not animate:
+        return [
+            xarray_image_as_png(img_data.sel(**{loop_over: coord}))
+            for coord in img_data.coords[loop_over].values
+        ]
+    xcoord = None
+    ycoord = None
+    for cc in ("x", "longitude", "Longitude", "long", "lon"):
+        if cc in img_data.coords:
+            xcoord = cc
+            break
+    for cc in ("y", "latitude", "Latitude", "lat"):
+        if cc in img_data.coords:
+            ycoord = cc
+            break
+    if not xcoord or not ycoord:
+        raise Exception("Could not identify spatial coordinates")
+    width = len(img_data.coords[xcoord])
+    height = len(img_data.coords[ycoord])
+    img_io = BytesIO()
+    # Render XArray to APNG via Pillow
+    # https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#apng-sequences
+    if loop_over and animate:
+        time_slices_array = [
+            xarray_image_as_png(img_data.sel(**{loop_over: coord}), animate=True)
+            for coord in img_data.coords[loop_over].values
+        ]
+        images = []
+
+        for t_slice in time_slices_array:
+            im = Image.fromarray(t_slice)
+            images.append(im)
+        images[0].save(
+            img_io,
+            "PNG",
+            save_all=True,
+            default_image=True,
+            loop=0,
+            duration=frame_duration,
+            append_images=images,
+        )
+        img_io.seek(0)
+        return img_io.read()
+
+    if "time" in img_data.dims:
+        img_data = img_data.squeeze(dim="time", drop=True)
+
+    pillow_data = render_frame(img_data.transpose(xcoord, ycoord), width, height)
+    if not loop_over and animate:
+        return pillow_data
+
+    # Change PNG rendering to Pillow
+    im_final = Image.fromarray(pillow_data)
+    im_final.save(img_io, "PNG")
+    img_io.seek(0)
+    return img_io.read()
+
+
+def render_frame(img_data: xarray.Dataset, width: int, height: int) -> numpy.ndarray:
+    """Render to a 3D numpy array an Xarray RGB(A) Dataset input
+
+    Args:
+        img_data ([type]): Input 3D XArray
+        width ([type]): Width of the frame to render
+        height ([type]): Height of the frame to render
+
+    Returns:
+        numpy.ndarray: 3D Rendered Xarray as numpy array
+    """
+    masked = False
+    last_band = None
+    buffer = numpy.zeros((4, width, height), numpy.uint8)
+    band_index = {"red": 0, "green": 1, "blue": 2, "alpha": 3}
+    for band_var in img_data.data_vars:
+        band = str(band_var)
+        index = band_index[band]
+        band_data = img_data[band].values
+        if band == "alpha":
+            masked = True
+        buffer[index, :, :] = band_data
+        last_band = band_data
+    if not masked:
+        assert last_band is not None  # For typechecker.
+        alpha_mask = numpy.empty(last_band.shape).astype("uint8")
+        alpha_mask.fill(255)
+        buffer[3, :, :] = alpha_mask
+    return buffer.transpose()

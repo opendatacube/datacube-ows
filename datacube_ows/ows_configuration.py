@@ -26,8 +26,6 @@ from threading import Lock
 from typing import Any, cast
 
 import numpy
-from babel.messages.catalog import Catalog
-from babel.messages.pofile import read_po
 from datacube import Datacube
 from datacube.cfg import ODCConfig
 from odc.geo import CRS, CRSError
@@ -63,6 +61,7 @@ TYPE_CHECKING = False
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
+    from babel.messages.catalog import Catalog
     from datacube.api.query import GroupBy
     from datacube.cfg import ODCEnvironment
     from datacube.model import Measurement, Product
@@ -1686,6 +1685,8 @@ class OWSConfig(OWSMetadataConfig):
             )
             raise ODCInitException(e) from None
         if self.msg_file_name:
+            from babel.messages.pofile import read_po
+
             try:
                 with open(self.msg_file_name, "rb") as fp:
                     self.set_msg_src(
@@ -1712,6 +1713,8 @@ class OWSConfig(OWSMetadataConfig):
 
     def export_metadata(self) -> Catalog:
         if self.catalog is None:
+            from babel.messages.catalog import Catalog
+
             now = datetime.datetime.now()
             header: str = f"""# Translations for datacube-ows metadata instance:
 #      {self.title}
