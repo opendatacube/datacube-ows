@@ -61,7 +61,7 @@ def dim1_da(
     name: str, vals: list, coords: list, with_time: bool = True, attrs=None
 ) -> xr.DataArray:
     if len(vals) != len(coords):
-        raise Exception("vals and coords must match len")
+        raise ValueError("vals and coords must match lengths")
     if attrs is None:
         attrs = {}
     dims = ["dim"]
@@ -78,10 +78,10 @@ def dim1_da(
 
 def dim1_da_time(name: str, vals, dates, coords, attrs=None) -> xr.DataArray:
     if len(coords) != len(vals):
-        raise Exception("vals and coords must match lengths")
+        raise ValueError("vals and coords must match lengths")
     for v in vals:
         if len(v) != len(dates):
-            raise Exception("dates and coords must match lengths")
+            raise ValueError("dates and coords must match lengths")
     dims = ["dim", "time"]
     shape = [len(coords), len(dates)]
     coords = {"dim": coords, "time": [np.datetime64(d, "ns") for d in dates]}
