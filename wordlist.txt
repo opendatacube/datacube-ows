@@ -112,6 +112,7 @@ crt
 CSIRO
 cryptographic
 ctl
+CVE
 customisable
 customisations
 customizable
@@ -371,6 +372,7 @@ PyDev
 pydevd
 pygments
 pylint
+pyows
 pypackage
 pypi
 PyPI
@@ -458,6 +460,7 @@ uv
 ux
 vaguries
 valpesendorfer
+ValueError
 virtualenv
 wcs
 wcsrequest
