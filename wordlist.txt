@@ -112,6 +112,7 @@ crt
 CSIRO
 cryptographic
 ctl
+CVE
 customisable
 customisations
 customizable
@@ -458,6 +459,7 @@ uv
 ux
 vaguries
 valpesendorfer
+ValueError
 virtualenv
 wcs
 wcsrequest
