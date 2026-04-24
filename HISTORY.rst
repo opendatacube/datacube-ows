@@ -10,7 +10,10 @@ Datacube-ows version 1.9.x releases are designed to work with datacube-core vers
 1.9.13 (2026-04-24)
 -------------------
 
-Security release to address CVE-2026-41066
+Security release to address CVE-2026-41066: a high severity vulnerability in lxml, which
+is an indirect dependency of OWS (through pyows).  The risk to OWS seems low, because
+we do not support XML POST requests, so there is no obvious way for an attacker to inject
+malicious XML, but this release silences security alerts.
 
 Also includes some code cleanup and improvements to error handling.
 

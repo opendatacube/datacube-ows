@@ -372,6 +372,7 @@ PyDev
 pydevd
 pygments
 pylint
+pyows
 pypackage
 pypi
 PyPI
