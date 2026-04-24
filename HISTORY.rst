@@ -7,6 +7,31 @@ History
 
 Datacube-ows version 1.9.x releases are designed to work with datacube-core versions 1.9.x.
 
+1.9.13 (2026-04-24)
+-------------------
+
+Security release to address CVE-2026-41066
+
+Also includes some code cleanup and improvements to error handling.
+
+What's Changed
+--------------
+
+* Reduce transitive imports in update_ranges by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1565
+* Type adjustments for Ty by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1566
+* Raise ValueError instead of Exception on faulty input by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1567
+* Prepare for 1.9.13 release by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1572
+
+Automated Updates
+-----------------
+
+* build(deps): bump astral-sh/uv from 0.11.6 to 0.11.7 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1564
+* build(deps): bump the actions-deps group with 3 updates by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1568
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1569
+* build(deps): bump lxml from 6.0.4 to 6.1.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1570
+
+**Full Changelog**: https://github.com/opendatacube/datacube-ows/compare/1.9.12...1.9.13
+
 1.9.12 (2026-04-16)
 -------------------
 
@@ -41,6 +66,8 @@ What's Changed
 * pyproject: add webserver optional by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1560
 * Move create_app to startup_utils by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1561
 * Prepare for 1.9.12 release by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1562
+* Time utils cleanup by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1563
+
 
 Automated Updates
 -----------------
