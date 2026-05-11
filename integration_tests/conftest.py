@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import gc
 import os
 
 import pytest
@@ -42,6 +43,11 @@ def ows_cfg() -> Generator[OWSConfig]:
     cfg = get_config(refresh=True)
     yield cfg
     cfg.dc.index._db.close()
+    # The SQLAlchemy pools belonging to the engine are not garbage collected frequently
+    # enough with the new GC in Python 3.14.0-3.14.4 so postgres runs out of
+    # connections. Trigger a collection manually as workaround.
+    # Python 3.14.5 will contain the same GC as Python 3.13.
+    gc.collect()
 
 
 class generic_obj:
