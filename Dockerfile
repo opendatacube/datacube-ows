@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM ghcr.io/astral-sh/uv:0.11.14@sha256:1025398289b62de8269e70c45b91ffa37c373f38118d7da036fb8bb8efc85d97 AS uv
 
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.4@sha256:9acfdf967ece13a9a1d9622a494d726aad6b9759aeaae40bbd4d8cb74c843971 AS base
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.13.0@sha256:e0fedbcc5b51bd12617d6a6cf8b7c3244d98cbd29b266925fd9061f40081b351 AS base
 
 LABEL org.opencontainers.image.source=https://github.com/opendatacube/datacube-ows
 LABEL org.opencontainers.image.description="Datacube OWS"
@@ -28,7 +28,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && gpg --batch --keyserver keyserver.ubuntu.com --recv-keys "$pg_key" \
     && gpg --batch --export --armor "$pg_key" > /etc/apt/keyrings/postgres.gpg.asc \
     && gpgconf --kill all \
-    && echo "deb [signed-by=/etc/apt/keyrings/postgres.gpg.asc] http://apt.postgresql.org/pub/repos/apt noble-pgdg main $PG_VERSION" | tee /etc/apt/sources.list.d/postgres.list \
+    && echo "deb [signed-by=/etc/apt/keyrings/postgres.gpg.asc] http://apt.postgresql.org/pub/repos/apt resolute-pgdg main $PG_VERSION" | tee /etc/apt/sources.list.d/postgres.list \
     && apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
@@ -49,7 +49,7 @@ ENV UV_COMPILE_BYTECODE=0 \
     UV_LINK_MODE=copy \
     UV_PROJECT_ENVIRONMENT=/app \
     UV_PYTHON_DOWNLOADS=never \
-    UV_PYTHON=python3.12
+    UV_PYTHON=python3.14
 
 WORKDIR /build
 
