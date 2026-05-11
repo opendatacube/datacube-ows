@@ -6,15 +6,13 @@
 
 import os
 
-from datacube_ows.ows_configuration import OWSConfig, get_config, read_config
+from datacube_ows.ows_configuration import OWSConfig, read_config
 
 src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def test_metadata_export() -> None:
-    cfg = get_config(refresh=True)
-
-    export = cfg.export_metadata()
+def test_metadata_export(ows_cfg: OWSConfig) -> None:
+    export = ows_cfg.export_metadata()
     assert "folder.0.title" not in export
     assert "folder.sentinel2.title" in export
 
