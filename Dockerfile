@@ -107,6 +107,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
+            # FIXME: install curl in complementary-config-test.yaml instead.
+            curl \
             gosu \
             tini \
             $EXTRAS \
