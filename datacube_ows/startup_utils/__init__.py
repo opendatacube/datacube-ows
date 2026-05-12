@@ -8,7 +8,6 @@ from __future__ import annotations
 import logging
 import os
 import sys
-import warnings
 from time import monotonic
 from typing import Any, TypeVar
 
@@ -16,6 +15,7 @@ from flask import Flask, g, request
 from sqlalchemy.exc import OperationalError
 
 from datacube_ows.debug import initialise_debugging
+from datacube_ows.warnings import initialise_ignorable_warnings
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -38,13 +38,6 @@ def initialise_logger(name: str | None = None) -> Logger:
     # produced by this application
     log.setLevel(logging.getLogger("gunicorn.error").getEffectiveLevel())
     return log
-
-
-def initialise_ignorable_warnings() -> None:
-    # Suppress annoying rasterio warning message every time we write to a non-georeferenced image format
-    from rasterio.errors import NotGeoreferencedWarning
-
-    warnings.simplefilter("ignore", category=NotGeoreferencedWarning)
 
 
 SentryEvent = TypeVar("SentryEvent")
