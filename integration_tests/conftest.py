@@ -20,6 +20,8 @@ if TYPE_CHECKING:
 
     from flask import Flask
 
+    from datacube_ows.ows_configuration import OWSConfig
+
 
 @pytest.fixture(scope="session")
 def flask_app() -> Generator[Flask]:
@@ -31,6 +33,15 @@ def flask_app() -> Generator[Flask]:
 def flask_client(flask_app) -> Generator[WSGIServer]:
     with flask_app.test_client() as client:
         yield client
+
+
+@pytest.fixture
+def ows_cfg() -> Generator[OWSConfig]:
+    from datacube_ows.ows_configuration import get_config
+
+    cfg = get_config(refresh=True)
+    yield cfg
+    cfg.dc.index._db.close()
 
 
 class generic_obj:

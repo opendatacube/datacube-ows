@@ -4,6 +4,8 @@
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
 
+from __future__ import annotations
+
 import os
 from urllib import request
 
@@ -13,7 +15,7 @@ from owslib.util import ServiceException
 from owslib.wcs import WebCoverageService
 
 from datacube_ows.legend_utils import retrying_requests
-from datacube_ows.ows_configuration import OWSConfig, TimeRes, get_config
+from datacube_ows.ows_configuration import TimeRes
 from integration_tests.utils import (
     ODCExtent,
     disjoint_bbox,
@@ -27,6 +29,10 @@ if os.environ.get("OWS_SUPPRESS_RETRIES_IN_TESTS"):
     import requests
 
     retrying_requests = requests  # type:ignore[assignment]
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.ows_configuration import OWSConfig
 
 
 def check_wcs_error(
@@ -202,12 +208,11 @@ def test_wcs1_getcov_nobbox(ows_server) -> None:
     )
 
 
-def test_wcs1_time_exceptions(ows_server) -> None:
+def test_wcs1_time_exceptions(ows_server, ows_cfg: OWSConfig) -> None:
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
     test_layer_name = contents[0]
-    cfg = get_config(refresh=True)
-    layer = cfg.layer_index[test_layer_name]
+    layer = ows_cfg.layer_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST_TWO
     )
@@ -265,12 +270,11 @@ def test_wcs1_time_exceptions(ows_server) -> None:
 
 # Need a test database with multiple time slices to test successfully.
 @pytest.mark.xfail
-def test_wcs1_multi_time_exceptions(ows_server) -> None:
+def test_wcs1_multi_time_exceptions(ows_server, ows_cfg: OWSConfig) -> None:
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
     test_layer_name = contents[0]
-    cfg = get_config(refresh=True)
-    layer = cfg.layer_index[test_layer_name]
+    layer = ows_cfg.layer_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST_TWO
     )
@@ -293,14 +297,13 @@ def test_wcs1_multi_time_exceptions(ows_server) -> None:
     )
 
 
-def test_wcs1_getcov_no_meas(ows_server) -> None:
+def test_wcs1_getcov_no_meas(ows_server, ows_cfg: OWSConfig) -> None:
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
     for test_layer_name in contents:
         if not test_layer_name.startswith("s2_l"):
             break
-    cfg = get_config(refresh=True)
-    layer = cfg.layer_index[test_layer_name]
+    layer = ows_cfg.layer_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST
     )
@@ -322,14 +325,13 @@ def test_wcs1_getcov_no_meas(ows_server) -> None:
     )
 
 
-def test_wcs1_getcov_multi_style(ows_server) -> None:
+def test_wcs1_getcov_multi_style(ows_server, ows_cfg: OWSConfig) -> None:
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
     for test_layer_name in contents:
         if not test_layer_name.startswith("s2_l"):
             break
-    cfg = get_config(refresh=True)
-    layer = cfg.layer_index[test_layer_name]
+    layer = ows_cfg.layer_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST
     )
@@ -351,14 +353,13 @@ def test_wcs1_getcov_multi_style(ows_server) -> None:
     )
 
 
-def test_wcs1_width_height_res_exceptions(ows_server) -> None:
+def test_wcs1_width_height_res_exceptions(ows_server, ows_cfg: OWSConfig) -> None:
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
     for test_layer_name in contents:
         if not test_layer_name.startswith("s2_l"):
             break
-    cfg = get_config(refresh=True)
-    layer = cfg.layer_index[test_layer_name]
+    layer = ows_cfg.layer_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST
     )
@@ -545,14 +546,13 @@ def test_wcs1_width_height_res_exceptions(ows_server) -> None:
     )
 
 
-def test_wcs1_style(ows_server) -> None:
+def test_wcs1_style(ows_server, ows_cfg: OWSConfig) -> None:
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
     for test_layer_name in contents:
         if not test_layer_name.startswith("s2_l"):
             break
-    cfg = get_config(refresh=True)
-    layer = cfg.layer_index[test_layer_name]
+    layer = ows_cfg.layer_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST
     )
@@ -610,14 +610,13 @@ def test_wcs1_style(ows_server) -> None:
     assert r.status_code == 200
 
 
-def test_wcs1_ows_stats(ows_server) -> None:
+def test_wcs1_ows_stats(ows_server, ows_cfg: OWSConfig) -> None:
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
     for test_layer_name in contents:
         if not test_layer_name.startswith("s2_l"):
             break
-    cfg = get_config(refresh=True)
-    layer = cfg.layer_index[test_layer_name]
+    layer = ows_cfg.layer_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST
     )
@@ -642,14 +641,13 @@ def test_wcs1_ows_stats(ows_server) -> None:
     assert r.json()["profile"]
 
 
-def test_wcs1_getcov_bad_meas(ows_server) -> None:
+def test_wcs1_getcov_bad_meas(ows_server, ows_cfg: OWSConfig) -> None:
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
     for test_layer_name in contents:
         if not test_layer_name.startswith("s2_l"):
             break
-    cfg = get_config(refresh=True)
-    layer = cfg.layer_index[test_layer_name]
+    layer = ows_cfg.layer_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST
     )
@@ -671,14 +669,13 @@ def test_wcs1_getcov_bad_meas(ows_server) -> None:
     )
 
 
-def test_wcs1_getcov_badexception(ows_server) -> None:
+def test_wcs1_getcov_badexception(ows_server, ows_cfg: OWSConfig) -> None:
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
     for test_layer_name in contents:
         if not test_layer_name.startswith("s2_l"):
             break
-    cfg = get_config(refresh=True)
-    layer = cfg.layer_index[test_layer_name]
+    layer = ows_cfg.layer_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST
     )
@@ -701,14 +698,13 @@ def test_wcs1_getcov_badexception(ows_server) -> None:
     )
 
 
-def test_wcs1_getcov_interp(ows_server) -> None:
+def test_wcs1_getcov_interp(ows_server, ows_cfg: OWSConfig) -> None:
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
     contents = list(wcs.contents)
     for test_layer_name in contents:
         if not test_layer_name.startswith("s2_l"):
             break
-    cfg = get_config(refresh=True)
-    layer = cfg.layer_index[test_layer_name]
+    layer = ows_cfg.layer_index[test_layer_name]
     extents = ODCExtent(layer).wcs1_args(
         space=ODCExtent.CENTRAL_SUBSET_FOR_TIMES, time=ODCExtent.FIRST
     )
@@ -866,11 +862,9 @@ def test_wcs1_getcoverage_netcdf(ows_server) -> None:
     assert output.info()["Content-Type"] == "application/x-netcdf"
 
 
-def test_extent_utils() -> None:
-    OWSConfig._instance = None
-    cfg = get_config(refresh=True)
+def test_extent_utils(ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -985,13 +979,12 @@ def test_wcs1_getcoverage_exceptions(ows_server) -> None:
         assert "Invalid BBOX parameter" in str(e)
 
 
-def test_wcs1_describecoverage(ows_server) -> None:
+def test_wcs1_describecoverage(ows_server, ows_cfg: OWSConfig) -> None:
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="1.0.0", timeout=120)
-    cfg = get_config(refresh=True)
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
-    assert len(contents) == len(list(cfg.active_products))
+    assert len(contents) == len(list(ows_cfg.active_products))
     test_layer_name = contents[0]
 
     resp = wcs.getDescribeCoverage(test_layer_name)
@@ -1022,16 +1015,15 @@ def test_wcs1_describecov_all(ows_server) -> None:
     assert r.status_code == 200
 
 
-def test_wcs1_describecov_multi(ows_server) -> None:
-    cfg = get_config(refresh=True)
-    prods = list(cfg.active_products)
+def test_wcs1_describecov_multi(ows_server, ows_cfg: OWSConfig) -> None:
+    prods = list(ows_cfg.active_products)
     prod_names = sorted(p.name for p in prods)
     prod_names = prod_names[0:-2]
     r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={
             "request": "DescribeCoverage",
-            "coverageid": ",".join([p.name for p in cfg.active_products][0:2]),
+            "coverageid": ",".join([p.name for p in ows_cfg.active_products][0:2]),
             "version": "1.0.0",
         },
     )
@@ -1055,8 +1047,7 @@ def test_wcs20_server(ows_server) -> None:
         assert desc_cov is not None
 
 
-def test_wcs20_getcoverage_geotiff(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs20_getcoverage_geotiff(ows_server, ows_cfg: OWSConfig) -> None:
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="2.0.0", timeout=120)
 
@@ -1064,7 +1055,7 @@ def test_wcs20_getcoverage_geotiff(ows_server) -> None:
     layer = None
     contents = list(wcs.contents)
     for layer_cap in contents:
-        lyr = cfg.layer_index[layer_cap]
+        lyr = ows_cfg.layer_index[layer_cap]
         if lyr.ready and not lyr.hide and lyr.time_resolution != TimeRes.SUBDAY:
             layer = lyr
             break
@@ -1085,13 +1076,12 @@ def test_wcs20_getcoverage_geotiff(ows_server) -> None:
     assert output.info()["Content-Type"] == "image/geotiff"
 
 
-def test_wcs20_getcoverage_geotiff_bigimage(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs20_getcoverage_geotiff_big_image(ows_server, ows_cfg: OWSConfig) -> None:
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="2.0.0", timeout=120)
     layer = None
     for layer_cap in list(wcs.contents):
-        lyr = cfg.layer_index[layer_cap]
+        lyr = ows_cfg.layer_index[layer_cap]
         if lyr.ready and not lyr.hide and lyr.time_resolution != TimeRes.SUBDAY:
             layer = lyr
             break
@@ -1115,15 +1105,14 @@ def test_wcs20_getcoverage_geotiff_bigimage(ows_server) -> None:
     assert "too much data for a single request" in str(e.value)
 
 
-def test_wcs20_getcoverage_netcdf(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs20_getcoverage_netcdf(ows_server, ows_cfg: OWSConfig) -> None:
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="2.0.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
     for layer_cap in contents:
-        lyr = cfg.layer_index[layer_cap]
+        lyr = ows_cfg.layer_index[layer_cap]
         if lyr.ready and not lyr.hide and lyr.time_resolution != TimeRes.SUBDAY:
             layer = lyr
             break
@@ -1145,8 +1134,7 @@ def test_wcs20_getcoverage_netcdf(ows_server) -> None:
     assert output.info()["Content-Type"] == "application/x-netcdf"
 
 
-def test_wcs20_getcoverage_crs_alias(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs20_getcoverage_crs_alias(ows_server, ows_cfg: OWSConfig) -> None:
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="2.0.0", timeout=120)
 
@@ -1155,7 +1143,7 @@ def test_wcs20_getcoverage_crs_alias(ows_server) -> None:
     layer = None
     for lyr_name in contents:
         if not lyr_name.startswith("s2_l"):
-            layer = cfg.layer_index[lyr_name]
+            layer = ows_cfg.layer_index[lyr_name]
             break
     assert layer is not None
     extent = ODCExtent(layer)
@@ -1181,8 +1169,7 @@ def test_wcs20_getcoverage_crs_alias(ows_server) -> None:
     assert output.info()["Content-Type"] == "application/x-netcdf"
 
 
-def test_wcs20_getcoverage_multidate_geotiff(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs20_getcoverage_multidate_geotiff(ows_server, ows_cfg: OWSConfig) -> None:
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="2.0.0", timeout=120)
 
@@ -1190,7 +1177,7 @@ def test_wcs20_getcoverage_multidate_geotiff(ows_server) -> None:
     contents = list(wcs.contents)
     layer = None
     for layer_cap in contents:
-        lyr = cfg.layer_index[layer_cap]
+        lyr = ows_cfg.layer_index[layer_cap]
         if lyr.ready and not lyr.hide and lyr.time_resolution != TimeRes.SUBDAY:
             layer = lyr
             break
@@ -1211,18 +1198,17 @@ def test_wcs20_getcoverage_multidate_geotiff(ows_server) -> None:
         assert "Format does not support multi-time datasets" in str(e)
 
 
-def test_wcs20_getcoverage_multidate_netcdf(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs20_getcoverage_multidate_netcdf(ows_server, ows_cfg: OWSConfig) -> None:
     # Use owslib to confirm that we have a somewhat compliant WCS service
     wcs = WebCoverageService(url=ows_server.url + "/wcs", version="2.0.0", timeout=120)
 
     # Ensure that we have at least some layers available
     contents = list(wcs.contents)
-    for layer_cfg in cfg.layer_index.values():
+    for layer_cfg in ows_cfg.layer_index.values():
         assert not layer_cfg.hide
-    assert len(contents) == len(list(cfg.active_products))
+    assert len(contents) == len(list(ows_cfg.active_products))
     for i in (0, 11):
-        layer = cfg.layer_index[contents[i]]
+        layer = ows_cfg.layer_index[contents[i]]
         if layer.time_resolution == TimeRes.SUBDAY:
             continue
         extent = ODCExtent(layer)
@@ -1242,16 +1228,15 @@ def test_wcs20_getcoverage_multidate_netcdf(ows_server) -> None:
         assert resp
 
 
-def test_wcs21_server(ows_server) -> None:
+def test_wcs21_server(ows_server, ows_cfg: OWSConfig) -> None:
     # N.B. At time of writing owslib does not support WCS 2.1, so we have to make requests manually.
     r = retrying_requests.get(
         ows_server.url + "/wcs",
         params={"request": "GetCapabilities", "version": "2.1.0", "service": "WCS"},
     )
     assert r.status_code == 200
-    cfg = get_config(refresh=True)
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             assert lyr.name in r.text
@@ -1259,9 +1244,8 @@ def test_wcs21_server(ows_server) -> None:
     assert layer
 
 
-def test_wcs21_describecoverage(ows_server) -> None:
-    cfg = get_config(refresh=True)
-    layers = list(cfg.active_product_index.values())
+def test_wcs21_describecoverage(ows_server, ows_cfg: OWSConfig) -> None:
+    layers = list(ows_cfg.active_product_index.values())
     layer = layers[0]
     # N.B. At time of writing owslib does not support WCS 2.1, so we have to make requests manually.
     r = retrying_requests.get(
@@ -1292,10 +1276,9 @@ def test_wcs21_describecoverage(ows_server) -> None:
         assert l.name in r.text
 
 
-def test_wcs21_getcoverage(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs21_getcoverage(ows_server, ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide and not lyr.name.startswith("s2_l"):
             layer = lyr
             break
@@ -1321,10 +1304,9 @@ def test_wcs21_getcoverage(ows_server) -> None:
     assert r.status_code == 200
 
 
-def test_wcs21_ows_stats(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs21_ows_stats(ows_server, ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide and not lyr.name.startswith("s2_l"):
             layer = lyr
             break
@@ -1366,10 +1348,9 @@ def test_wcs2_getcov_badcov(ows_server) -> None:
     )
 
 
-def test_wcs2_getcov_unpub_subset_crs(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs2_getcov_unpub_subset_crs(ows_server, ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1389,10 +1370,9 @@ def test_wcs2_getcov_unpub_subset_crs(ows_server) -> None:
     )
 
 
-def test_wcs2_getcov_unpub_output_crs(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs2_getcov_unpub_output_crs(ows_server, ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1412,10 +1392,9 @@ def test_wcs2_getcov_unpub_output_crs(ows_server) -> None:
     )
 
 
-def test_wcs2_getcov_dup_subset_dims(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs2_getcov_dup_subset_dims(ows_server, ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1441,10 +1420,9 @@ def test_wcs2_getcov_dup_subset_dims(ows_server) -> None:
     )
 
 
-def test_wcs2_getcov_trim_time(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs2_getcov_trim_time(ows_server, ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1472,10 +1450,9 @@ def test_wcs2_getcov_trim_time(ows_server) -> None:
     assert r.status_code == 200
 
 
-def test_wcs2_getcov_badtrim_time(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs2_getcov_badtrim_time(ows_server, ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1503,10 +1480,9 @@ def test_wcs2_getcov_badtrim_time(ows_server) -> None:
     )
 
 
-def test_wcs2_getcov_slice_space(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs2_getcov_slice_space(ows_server, ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide and not lyr.name.startswith("s2_l"):
             layer = lyr
             break
@@ -1533,10 +1509,9 @@ def test_wcs2_getcov_slice_space(ows_server) -> None:
     assert r.status_code == 200
 
 
-def test_wcs2_getcov_invalid_space_dim(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs2_getcov_invalid_space_dim(ows_server, ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1564,10 +1539,9 @@ def test_wcs2_getcov_invalid_space_dim(ows_server) -> None:
     )
 
 
-def test_wcs2_getcov_duplicate_scale_dim(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs2_getcov_duplicate_scale_dim(ows_server, ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1594,10 +1568,9 @@ def test_wcs2_getcov_duplicate_scale_dim(ows_server) -> None:
     )
 
 
-def test_wcs2_getcov_unscalable_dim(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs2_getcov_unscalable_dim(ows_server, ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1624,10 +1597,9 @@ def test_wcs2_getcov_unscalable_dim(ows_server) -> None:
     )
 
 
-def test_wcs2_getcov_styles(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs2_getcov_styles(ows_server, ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide and not lyr.name.startswith("s2_l"):
             layer = lyr
             break
@@ -1684,10 +1656,9 @@ def test_wcs2_getcov_styles(ows_server) -> None:
     assert r.status_code == 200
 
 
-def test_wcs2_tiff_multidate(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs2_tiff_multidate(ows_server, ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide and lyr.time_resolution != TimeRes.SUBDAY:
             layer = lyr
             break
@@ -1716,10 +1687,9 @@ def test_wcs2_tiff_multidate(ows_server) -> None:
     assert "Format does not support multi-time" in r.text
 
 
-def test_wcs2_getcov_bands(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs2_getcov_bands(ows_server, ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide and not lyr.name.startswith("s2_l"):
             layer = lyr
             break
@@ -1746,10 +1716,9 @@ def test_wcs2_getcov_bands(ows_server) -> None:
     assert r.status_code == 200
 
 
-def test_wcs2_getcov_band_range(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs2_getcov_band_range(ows_server, ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide and not lyr.name.startswith("s2_l"):
             layer = lyr
             break
@@ -1776,10 +1745,9 @@ def test_wcs2_getcov_band_range(ows_server) -> None:
     assert r.status_code == 200
 
 
-def test_wcs2_getcov_bad_band(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs2_getcov_bad_band(ows_server, ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide and lyr.time_resolution != TimeRes.SUBDAY:
             layer = lyr
             break
@@ -1807,10 +1775,9 @@ def test_wcs2_getcov_bad_band(ows_server) -> None:
     )
 
 
-def test_wcs2_getcov_bad_band_range(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs2_getcov_bad_band_range(ows_server, ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide and lyr.time_resolution != TimeRes.SUBDAY:
             layer = lyr
             break
@@ -1855,10 +1822,9 @@ def test_wcs2_getcov_bad_band_range(ows_server) -> None:
     )
 
 
-def test_wcs2_getcov_native_format(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs2_getcov_native_format(ows_server, ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide and not lyr.name.startswith("s2_l"):
             layer = lyr
             break
@@ -1883,10 +1849,9 @@ def test_wcs2_getcov_native_format(ows_server) -> None:
     assert r.status_code == 200
 
 
-def test_wcs2_getcov_bad_format(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs2_getcov_bad_format(ows_server, ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break
@@ -1930,10 +1895,9 @@ def test_wcs2_getcov_bad_format(ows_server) -> None:
     )
 
 
-def test_wcs2_getcov_bad_multitime_format(ows_server) -> None:
-    cfg = get_config(refresh=True)
+def test_wcs2_getcov_bad_multitime_format(ows_server, ows_cfg: OWSConfig) -> None:
     layer = None
-    for lyr in cfg.layer_index.values():
+    for lyr in ows_cfg.layer_index.values():
         if lyr.ready and not lyr.hide:
             layer = lyr
             break

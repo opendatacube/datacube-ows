@@ -3,36 +3,37 @@
 #
 # Copyright (c) 2017-2024 OWS Contributors
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import pytest
 from odc.geo.geom import box
 
 from datacube_ows.index.postgres.mv_index import MVSelectOpts, mv_search
-from datacube_ows.ows_configuration import get_config
 from datacube_ows.time_utils import local_solar_date_range
 from integration_tests.utils import enclosed_bbox
 
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from datacube_ows.ows_configuration import OWSConfig
 
-def test_full_layer() -> None:
-    cfg = get_config()
-    lyr = next(iter(cfg.layer_index.values()))
+
+def test_full_layer(ows_cfg: OWSConfig) -> None:
+    lyr = next(iter(ows_cfg.layer_index.values()))
     assert lyr.dc.index.environment.index_driver in ("postgres", "default")
     sel = mv_search(lyr.dc, MVSelectOpts.COUNT, products=lyr.products)
     assert sel > 0
 
 
-def test_select_all() -> None:
-    cfg = get_config()
-    lyr = next(iter(cfg.layer_index.values()))
+def test_select_all(ows_cfg: OWSConfig) -> None:
+    lyr = next(iter(ows_cfg.layer_index.values()))
     assert lyr.dc.index.environment.index_driver in ("postgres", "default")
     rows = mv_search(lyr.dc, MVSelectOpts.ALL, products=lyr.products)
     for row in rows:
         assert len(row) > 1
 
 
-def test_no_products() -> None:
-    cfg = get_config()
-    lyr = next(iter(cfg.layer_index.values()))
+def test_no_products(ows_cfg: OWSConfig) -> None:
+    lyr = next(iter(ows_cfg.layer_index.values()))
     assert lyr.dc.index.environment.index_driver in ("postgres", "default")
     with pytest.raises(Exception) as e:
         _ = mv_search(lyr.dc, MVSelectOpts.COUNT)
@@ -52,9 +53,8 @@ class MockGeobox:
         self.extent = geom
 
 
-def test_time_search() -> None:
-    cfg = get_config()
-    lyr = next(iter(cfg.layer_index.values()))
+def test_time_search(ows_cfg: OWSConfig) -> None:
+    lyr = next(iter(ows_cfg.layer_index.values()))
     assert lyr.dc.index.environment.index_driver in ("postgres", "default")
     time = lyr.ranges.end_time
     geom = box(
@@ -70,18 +70,16 @@ def test_time_search() -> None:
     assert sel > 0
 
 
-def test_count() -> None:
-    cfg = get_config()
-    lyr = next(iter(cfg.layer_index.values()))
+def test_count(ows_cfg: OWSConfig) -> None:
+    lyr = next(iter(ows_cfg.layer_index.values()))
     assert lyr.dc.index.environment.index_driver in ("postgres", "default")
     count = mv_search(lyr.dc, MVSelectOpts.COUNT, products=lyr.products)
     ids = mv_search(lyr.dc, MVSelectOpts.IDS, products=lyr.products)
     assert len(ids) == count
 
 
-def test_datasets() -> None:
-    cfg = get_config()
-    lyr = next(iter(cfg.layer_index.values()))
+def test_datasets(ows_cfg: OWSConfig) -> None:
+    lyr = next(iter(ows_cfg.layer_index.values()))
     assert lyr.dc.index.environment.index_driver in ("postgres", "default")
     dss = mv_search(lyr.dc, MVSelectOpts.DATASETS, products=lyr.products)
     ids = mv_search(lyr.dc, MVSelectOpts.IDS, products=lyr.products)
@@ -90,9 +88,8 @@ def test_datasets() -> None:
         assert ds.id in ids
 
 
-def test_extent_and_spatial() -> None:
-    cfg = get_config()
-    lyr = next(iter(cfg.layer_index.values()))
+def test_extent_and_spatial(ows_cfg: OWSConfig) -> None:
+    lyr = next(iter(ows_cfg.layer_index.values()))
     assert lyr.dc.index.environment.index_driver in ("postgres", "default")
     layer_ext_bbx = (
         lyr.bboxes["EPSG:4326"]["left"],
