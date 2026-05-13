@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import xarray
 
-from datacube_ows.startup_utils import initialise_ignorable_warnings
 from datacube_ows.styles.base import StandaloneProductProxy, StyleDefBase
+from datacube_ows.warnings import initialise_ignorable_warnings
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:

@@ -85,7 +85,7 @@ def test_initialise_logger() -> None:
 
 
 def test_initialise_ign_warn() -> None:
-    from datacube_ows.startup_utils import initialise_ignorable_warnings
+    from datacube_ows.warnings import initialise_ignorable_warnings
 
     initialise_ignorable_warnings()
 
