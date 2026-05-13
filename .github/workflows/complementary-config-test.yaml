@@ -77,6 +77,7 @@ jobs:
           cd ./datacube-ows
           export $(grep -v '^#' ./complementary_config_test/.env_complementary_config_dea_dev | xargs)
           docker compose -f docker-compose.yaml -f docker-compose.db.yaml up --quiet-pull -d --wait
+          docker compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "apt-get update && apt-get install -y curl"
           docker compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "datacube system init && datacube system check"
           docker compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "curl https://raw.githubusercontent.com/GeoscienceAustralia/dea-config/master/dev/services/wms/inventory.json -o /tmp/inventory.json"
           docker compose -f docker-compose.yaml -f docker-compose.db.yaml exec -T ows /bin/sh -c "cd /src && ./compare-cfg.sh"
