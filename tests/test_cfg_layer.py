@@ -924,14 +924,14 @@ def test_native_resolution_mismatch(
 
 
 def test_load_driver_inherit(
-        minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
+    minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
 ) -> None:
     lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
     assert lyr.load_driver == minimal_global_cfg.load_driver
 
 
-def test_load_driver_inherit(
-        minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
+def test_load_driver_override(
+    minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
 ) -> None:
     minimal_global_cfg.load_driver = "rio"
     minimal_layer_cfg["load_driver"] = "legacy"
@@ -940,7 +940,7 @@ def test_load_driver_inherit(
 
 
 def test_invalid_load_driver(
-        minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
+    minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
 ) -> None:
     minimal_layer_cfg["load_driver"] = "scoobydoo"
     with pytest.raises(ConfigException) as e:
