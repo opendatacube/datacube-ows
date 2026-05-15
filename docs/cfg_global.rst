@@ -26,11 +26,16 @@ You can override this with the ``env`` global config entry::
 Note that this can be over-ridden at the layer level, allowing one OWS instance to serve data
 from multiple indexes.
 
-Loader Driver
-=============
+Load Driver (load_driver)
+=========================
 
-Specifies the ODC loader driver to use.  Currently the default is "legacy".  Set to
+Specifies the global ODC loader driver to use.  Currently the default is "legacy".  Set to
 "rio" to use the rio loader driver from odc-loader.
+
+The "rio" driver offers better performance, but the "legacy" driver offers better support
+for non-standard file formats.
+
+The global ODC loader driver setting can be overridden by individual layers.
 
 Notes:
 
