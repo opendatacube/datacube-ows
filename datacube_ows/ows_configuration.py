@@ -662,6 +662,16 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.declare_unready("product")
         self.declare_unready("definition")
 
+        load_driver = cfg.get("load_driver")
+        if load_driver is None:
+            self.load_driver: str = global_cfg.load_driver
+        elif load_driver not in ["rio", "legacy"]:
+            raise ConfigException(
+                f"Invalid load_driver: {load_driver} Please use 'rio' or 'legacy' (or None to use the global setting)"
+            )
+        else:
+            self.load_driver = cast("str", load_driver)
+
         if global_cfg.user_band_math_extension:
             self.user_band_math = bool(cfg.get("user_band_math", False))
         else:
@@ -901,7 +911,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
             )
 
         if cfg.get("fuse_func"):
-            if self.global_cfg.load_driver == "legacy":
+            if self.load_driver == "legacy":
                 self.fuse_func: FunctionWrapper | str | None = FunctionWrapper(
                     self, cast("str | CFG_DICT", cfg["fuse_func"])
                 )
