@@ -921,3 +921,29 @@ def test_native_resolution_mismatch(
     assert lyr.ready
     assert math.isclose(lyr.resolution_x, 0.001, rel_tol=1e-8)
     assert math.isclose(lyr.resolution_y, -0.001, rel_tol=1e-8)
+
+
+def test_load_driver_inherit(
+        minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
+) -> None:
+    lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+    assert lyr.load_driver == minimal_global_cfg.load_driver
+
+
+def test_load_driver_inherit(
+        minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
+) -> None:
+    minimal_global_cfg.load_driver = "rio"
+    minimal_layer_cfg["load_driver"] = "legacy"
+    lyr = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+    assert lyr.load_driver == "legacy"
+
+
+def test_invalid_load_driver(
+        minimal_global_cfg, minimal_layer_cfg, minimal_dc, mock_range
+) -> None:
+    minimal_layer_cfg["load_driver"] = "scoobydoo"
+    with pytest.raises(ConfigException) as e:
+        _ = parse_ows_layer(minimal_layer_cfg, global_cfg=minimal_global_cfg)
+    assert "Invalid load_driver" in str(e.value)
+    assert "scoobydoo" in str(e.value)
