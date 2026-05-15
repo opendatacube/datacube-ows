@@ -1121,6 +1121,7 @@ ows_cfg = {
                             "title": "Surface reflectance (Sentinel-2) (postgis db)",
                             "name": "s2_l2a_postgis",
                             "abstract": """layer s2_l2a (postgis db)""",
+                            "load_driver": "legacy",
                             "product_name": "s2_l2a",
                             "bands": bands_sentinel,
                             "env": "owspostgis",

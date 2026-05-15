@@ -460,7 +460,7 @@ class DataStacker:
             skip_broken_datasets=skip_broken,
             patch_url=self._layer.patch_url,
             resampling=resampling,
-            driver=self.cfg.load_driver,
+            driver=self._layer.load_driver,
         )
 
     # TODO: Make skip_broken passed in via config

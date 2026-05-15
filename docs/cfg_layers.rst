@@ -305,6 +305,19 @@ The conditions under which to switch to the low-resolution product(s)
 are defined in the `resource_limits <#resource-limits-resource-limits>`_
 section, discussed below.
 
+-------------------------
+Load Driver (load_driver)
+-------------------------
+
+Specifies the ODC loader driver to use for the layer.  May have one of the following values:
+
+1. ``"legacy"``: Use the legacy ODC loader.
+2. ``"rio"``: Use the "rio" ODC loader.
+3. ``None``: Use the global ``load_driver`` setting.
+
+Note: For non-legacy loader drivers, fuser functions must be specified as a string (fully
+qualified Python name).
+
 -----------------------------------------
 Timeless Mosaic Layers (mosaic_date_func)
 -----------------------------------------
@@ -981,7 +994,7 @@ Fuse Function (fuse_func)
 Determines how multiple dataset arrays are compressed into a
 single time array.
 
-If the global "load_driver" is set to "rio", ``fuse_func`` must be a string
+If the "load_driver" for the layer is set to "rio", ``fuse_func`` must be a string
 representing an importable, fully-qualified python function name (or None).
 
 For the legacy loader only, ``fuse_func`` can be Specified using OWS's :doc:`function configuration
