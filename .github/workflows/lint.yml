@@ -51,9 +51,14 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install the project
         run: uv sync --locked --extra=dev
+      - name: Detect number of cores
+        run: |
+          CORES=$(nproc)
+          echo "MYPY_NUM_WORKERS=$CORES" >> $GITHUB_ENV
       - name: run linter
         run: |
           uv run ${LINT_COMMAND}
         env:
           LINT_COMMAND: ${{matrix.lintcommand}}
           UV_PYTHON_PREFERENCE: managed
+          MYPY_NUM_WORKERS: ${{ env.MYPY_NUM_WORKERS }}

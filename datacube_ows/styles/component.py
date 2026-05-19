@@ -50,7 +50,7 @@ class ComponentStyleDef(StyleDefBase):
             defer_multi_date=defer_multi_date,
             user_defined=user_defined,
         )
-        style_cfg: CFG_DICT = cast("CFG_DICT", self._raw_cfg)
+        style_cfg = cast("CFG_DICT", self._raw_cfg)
         self.raw_rgb_components: dict[str, Callable | LINEAR_COMP_DICT] = {}
         raw_components = cast(
             "dict[str, Callable | LINEAR_COMP_DICT]", style_cfg["components"]

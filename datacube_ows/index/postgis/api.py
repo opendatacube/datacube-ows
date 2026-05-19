@@ -231,7 +231,7 @@ pgisdriverlock = Lock()
 
 
 class OWSPostgisIndexDriver(OWSAbstractIndexDriver):
-    _driver = None
+    _driver: OWSPostgisIndex | None = None
 
     @classmethod
     @override

@@ -13,7 +13,7 @@ credential_lock = Lock()
 
 
 class CredentialManager:
-    _instance = None
+    _instance: CredentialManager | None = None
 
     def __new__(cls, log: Logger | None = None) -> CredentialManager:
         # new/init assumed to be called with credential_lock held

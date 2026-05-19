@@ -421,7 +421,7 @@ def single_style_from_args(layer: OWSNamedLayer, args, required: bool = True):
                     "name": "custom_user_style",
                     "index_expression": code,
                     "mpl_ramp": mpl_ramp,
-                    "range": colorscalerange,
+                    "range": colorscalerange,  # type:ignore[dict-item]
                     "legend": {
                         "title": "User-Custom Index",
                         "show_legend": True,
