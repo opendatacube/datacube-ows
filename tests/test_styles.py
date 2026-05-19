@@ -780,7 +780,7 @@ def test_bad_mpl_ramp() -> None:
 
     with pytest.raises(ConfigException) as e:
         _ = read_mpl_ramp("definitely_not_a_real_matplotlib_ramp_name")
-    assert "Invalid Matplotlib name: " in str(e.value)
+    assert "Invalid Matplotlib ramp name: " in str(e.value)
 
 
 @pytest.fixture
