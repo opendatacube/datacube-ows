@@ -9,7 +9,6 @@ import operator
 from typing import Any, cast
 
 import lark
-from datacube.virtual.expr import formula_parser
 
 from datacube_ows.config_utils import ConfigException
 
@@ -114,9 +113,12 @@ class Expression:
         """
         Class constructor
 
-        :param style: The style to which the expression belongs (may be a statically configured style, or user-defined.
+        :param style: The style to which the expression belongs
+                      (may be a statically configured style, or user-defined).
         :param expr_str: The expression string to be parsed.
         """
+        from datacube.virtual.expr import formula_parser
+
         self.style = style
         self.expr_str = expr_str
         parser = formula_parser()
