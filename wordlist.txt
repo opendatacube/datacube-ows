@@ -276,7 +276,7 @@ lingually
 ln
 localhost
 lxml
-micromamba
+mako
 mamba
 mambaorg
 matplotlib
@@ -284,6 +284,7 @@ MatPlotLib
 matplotlibrc
 maxage
 maxdepth
+micromamba
 misconfigured
 md
 mkdir
@@ -298,6 +299,8 @@ mv
 mydb
 myenv
 mypassword
+mypy
+MyPy
 mysecretpassword
 myuser
 namespace

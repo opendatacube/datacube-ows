@@ -7,6 +7,49 @@ History
 
 Datacube-ows version 1.9.x releases are designed to work with datacube-core versions 1.9.x.
 
+1.9.14 (2026-05-20)
+-------------------
+
+Adds support for per-layer override of load driver and upgrades docker image to GDAL 3.13.0,
+along with other minor cleanup.
+
+What's Changed
+--------------
+
+* CI: install curl package by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1587
+* Move ignore warnings to separate module by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1591
+* tests: add an ows_cfg fixture by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1586
+* Allow per-layer override of load_driver. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1595
+* Update to GDAL 3.13.0 by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1594
+* Update to MyPy 2.1 by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1600
+* Prepare for 1.9.14 release by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1599
+
+Automated Updates
+-----------------
+
+* build(deps): bump the actions-deps group with 2 updates by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1574
+* build(deps): bump osgeo/gdal from ubuntu-small-3.12.3 to ubuntu-small-3.12.4 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1573
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1575
+* build(deps): bump astral-sh/uv from 0.11.7 to 0.11.8 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1576
+* build(deps): bump aquasecurity/trivy-action from 0.35.0 to 0.36.0 in the actions-deps group by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1578
+* build(deps): bump mambaorg/micromamba from 2.5.0 to 2.6.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1577
+* build(deps): bump mambaorg/micromamba from `db88fcb` to `bca7732` by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1579
+* build(deps): bump astral-sh/uv from 0.11.8 to 0.11.10 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1580
+* build(deps): bump astral-sh/uv from 0.11.10 to 0.11.11 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1581
+* build(deps): bump mako from 1.3.11 to 1.3.12 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1582
+* build(deps): bump github/codeql-action from 4.35.2 to 4.35.3 in the actions-deps group by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1585
+* build(deps): bump astral-sh/uv from 0.11.11 to 0.11.13 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1584
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1589
+* build(deps): bump urllib3 from 2.6.3 to 2.7.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1588
+* build(deps): bump astral-sh/uv from 0.11.13 to 0.11.14 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1593
+* build(deps): bump mambaorg/micromamba from `bca7732` to `fc840b7` by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1592
+* build(deps): bump mambaorg/micromamba from 2.6.0 to 2.6.1 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1596
+* build(deps): bump github/codeql-action from 4.35.3 to 4.35.4 in the actions-deps group by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1597
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1598
+* build(deps): bump astral-sh/uv from 0.11.14 to 0.11.15 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1601
+
+**Full Changelog**: https://github.com/opendatacube/datacube-ows/compare/1.9.13...1.9.14
+
 1.9.13 (2026-04-24)
 -------------------
 
