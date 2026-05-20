@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from urllib import request
+from urllib.error import HTTPError
 
 import pytest
 from lxml.etree import XML, parse
@@ -18,7 +19,7 @@ from integration_tests.utils import get_xsd
 def check_wmts_error(
     url, expected_error_message: str, expected_status_code: int = 400
 ) -> None:
-    with pytest.raises(Exception) as e:
+    with pytest.raises(HTTPError) as e:
         _ = request.urlopen(url, timeout=10)
     # Validate status code
     assert e.value.getcode() == expected_status_code

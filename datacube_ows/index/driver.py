@@ -17,7 +17,7 @@ cache_lock = Lock()
 
 
 class OWSIndexDriverCache:
-    _instance = None
+    _instance: OWSIndexDriverCache | None = None
     _initialised = False
 
     def __new__(cls, *args, **kwargs) -> OWSIndexDriverCache:

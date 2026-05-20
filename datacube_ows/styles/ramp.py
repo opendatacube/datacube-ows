@@ -150,7 +150,8 @@ def crack_ramp(
 
 def read_mpl_ramp(mpl_ramp: str) -> RampRepr:
     """
-    Extract a named colour ramp from Matplotlib as a normalised OWS-compatible ramp specification
+    Extract a named colour ramp from Matplotlib as a normalised OWS-compatible ramp
+    specification
 
     :param mpl_ramp: The name of Matplotlib colour ramp
     :return: A normalised ramp specification.
@@ -159,7 +160,7 @@ def read_mpl_ramp(mpl_ramp: str) -> RampRepr:
     try:
         cmap = plt.get_cmap(mpl_ramp)
     except Exception:
-        raise ConfigException(f"Invalid Matplotlib name: {mpl_ramp}") from None
+        raise ConfigException(f"Invalid Matplotlib ramp name: {mpl_ramp}") from None
     val_range = numpy.arange(0.1, 1.1, 0.1)
     rgba_hex = to_hex(cmap(0.0))
     unscaled_cmap.append(RampNode(0.0, rgba_hex))

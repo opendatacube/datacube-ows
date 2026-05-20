@@ -200,7 +200,7 @@ pgdriverlock = Lock()
 
 
 class OWSPostgresIndexDriver(OWSAbstractIndexDriver):
-    _driver = None
+    _driver: OWSPostgresIndex | None = None
 
     @classmethod
     @override

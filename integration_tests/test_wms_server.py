@@ -7,6 +7,7 @@
 import math
 from pathlib import Path
 from urllib import request
+from urllib.error import HTTPError
 
 import pytest
 from lxml.etree import XML, XMLParser, XMLSchema, fromstring, parse
@@ -28,7 +29,7 @@ def get_xsd(name: str) -> XMLSchema:
 def check_wms_error(
     url, expected_error_message=None, expected_status_code: int = 400
 ) -> None:
-    with pytest.raises(Exception) as e:
+    with pytest.raises(HTTPError) as e:
         _ = request.urlopen(url, timeout=10)
     # Validate status code
     assert e.value.getcode() == expected_status_code

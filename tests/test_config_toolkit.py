@@ -42,8 +42,8 @@ def test_deepinherit_deep() -> None:
     assert child["a"] == 72
     assert child["b"]["spice"] == "nutmeg"
     assert child["b"]["fruit"] == "grapes"
-    assert child["b"]["c"]["foo"] == "bar"
-    assert child["b"]["c"]["wing"] == "chicken"
+    assert child["b"]["c"]["foo"] == "bar"  # type:ignore[index]
+    assert child["b"]["c"]["wing"] == "chicken"  # type:ignore[index]
     assert child["b"]["z"] == [11]
     assert child["b"]["y"] == ["some", "body", "once", "told", "me"]
 

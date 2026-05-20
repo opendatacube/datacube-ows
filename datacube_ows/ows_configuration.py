@@ -1003,7 +1003,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                 raise ConfigException(
                     f"Default style {cfg['default_style']} is not in the 'styles' for layer {self.name}"
                 )
-            self.default_style = self.style_index[cast("str", cfg["default_style"])]
+            self.default_style = self.style_index[cfg["default_style"]]
         else:
             self.default_style = self.styles[0]
 
