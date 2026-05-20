@@ -17,7 +17,7 @@ class CredentialManager:
 
     def __new__(cls, log: Logger | None = None) -> CredentialManager:
         # new/init assumed to be called with credential_lock held
-        if not cls._instance:
+        if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
