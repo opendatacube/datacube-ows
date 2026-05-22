@@ -48,17 +48,16 @@ def get_s3_browser_uris(
     s3bucket: str = "",
 ) -> set[str]:
     uris = []
-    last_crs = None
+    last_crs: CRS | None = None
+    pt_native: geom.Geometry | None = None
     for pbq, dss in datasets.items():
         if pbq.main:
             for tds in dss:
                 for ds in tds.values.item():
                     if pt and ds.extent:
-                        if ds.crs != last_crs:
+                        if pt_native is None or ds.crs != last_crs:
                             pt_native = pt.to_crs(ds.crs)
                             last_crs = ds.crs
-                        else:
-                            pt_native = pt
                         if ds.uri is not None and ds.extent.contains(pt_native):
                             uris.append(ds.uris if ds.has_multiple_uris() else [ds.uri])
                     else:
