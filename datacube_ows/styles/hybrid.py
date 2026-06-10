@@ -5,9 +5,8 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-from typing import cast
+from typing import cast, override
 
-from typing_extensions import override
 from xarray import DataArray, Dataset
 
 from datacube_ows.config_utils import ConfigException

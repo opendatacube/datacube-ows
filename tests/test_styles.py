@@ -6,11 +6,11 @@
 from __future__ import annotations
 
 import datetime
+from typing import override
 from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
-from typing_extensions import override
 from xarray import DataArray, Dataset, concat
 
 import datacube_ows.styles

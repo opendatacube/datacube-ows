@@ -10,7 +10,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
 from math import isclose
-from typing import Any, cast
+from typing import Any, cast, override
 
 import matplotlib
 import matplotlib.colorbar
@@ -18,7 +18,6 @@ import numpy
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, to_hex, to_rgba
 from numpy import ubyte
-from typing_extensions import override
 from xarray import Dataset
 
 from datacube_ows.config_utils import (

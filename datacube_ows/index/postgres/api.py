@@ -6,12 +6,11 @@
 from __future__ import annotations
 
 from threading import Lock
-from typing import Literal, cast
+from typing import Literal, cast, override
 
 import click
 from datacube.drivers.common_psql import as_role
 from sqlalchemy import text
-from typing_extensions import override
 
 from datacube_ows.index.api import (
     InsufficientDbPrivileges,

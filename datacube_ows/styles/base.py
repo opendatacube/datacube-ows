@@ -8,11 +8,10 @@ from __future__ import annotations
 import io
 import logging
 from threading import Lock
-from typing import Any, cast
+from typing import Any, cast, override
 
 import numpy as np
 import xarray as xr
-from typing_extensions import override
 
 from datacube_ows.config_utils import (
     AbstractMaskRule,

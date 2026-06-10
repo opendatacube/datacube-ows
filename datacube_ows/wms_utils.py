@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import math
 from datetime import UTC, datetime
+from typing import override
 
 import numpy
 import regex as re
@@ -17,7 +18,6 @@ from matplotlib import pyplot as plt
 from odc.geo import geom
 from odc.geo.crs import CRS
 from rasterio.warp import Resampling
-from typing_extensions import override
 
 from datacube_ows.config_utils import ConfigException
 from datacube_ows.ogc_exceptions import WMSException
