@@ -755,6 +755,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
 
         self.dynamic = cfg.get("dynamic", False)
 
+        self.bypass_spatial_search = bool(cfg.get("bypass_spatial_search"))
         self._ranges: LayerExtent | None = None
         self.bboxes: CFG_DICT = {}
         self.default_time: datetime.datetime | datetime.date | None = None
