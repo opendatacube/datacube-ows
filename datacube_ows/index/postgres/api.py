@@ -125,7 +125,7 @@ class OWSPostgresIndex(OWSAbstractIndex):
                 layer.dc,
                 MVSelectOpts.DATASETS,
                 times=times,
-                geom=geom,
+                geom=None if layer.bypass_spatial_search else geom,
                 products=products,
             ),
         )
