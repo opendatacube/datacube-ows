@@ -1074,6 +1074,7 @@ ows_cfg = {
                     "dynamic": False,
                     "native_crs": "EPSG:3577",
                     "time_resolution": "summary",
+                    "bypass_spatial_search": True,
                     "native_resolution": [25, -25],
                     "image_processing": {
                         "extent_mask_func": "datacube_ows.ogc_utils.mask_by_val",
