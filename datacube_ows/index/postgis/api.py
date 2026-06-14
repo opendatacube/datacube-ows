@@ -179,7 +179,9 @@ class OWSPostgisIndex(OWSAbstractIndex):
         products: Iterable[Product] | None = None,
     ) -> Iterable[Dataset]:
         return layer.dc.index.datasets.search(
-            **self._query(layer, times, geom, products)
+            **self._query(
+                layer, times, None if layer.bypass_spatial_search else geom, products
+            )
         )
 
     @override

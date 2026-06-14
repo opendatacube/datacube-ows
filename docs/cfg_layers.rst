@@ -318,6 +318,13 @@ Specifies the ODC loader driver to use for the layer.  May have one of the follo
 Note: For non-legacy loader drivers, fuser functions must be specified as a string (fully
 qualified Python name).
 
+---------------------------------------------
+Bypass Spatial Search (bypass_spatial_search)
+---------------------------------------------
+
+For products that are known to only have a single dataset per time-slice, setting the
+``bypass_spatial_search`` element to ``True`` may result in faster database searches.
+
 -----------------------------------------
 Timeless Mosaic Layers (mosaic_date_func)
 -----------------------------------------
