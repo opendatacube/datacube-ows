@@ -31,6 +31,7 @@ jobs:
       contents: read    # This is required for actions/checkout
       packages: write  # This is required for pushing to ghcr
       attestations: write # This is required for pushing the attestation
+      artifact-metadata: write # This is required for creating the storage record
 
     steps:
       - name: Checkout repository
