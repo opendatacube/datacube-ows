@@ -17,6 +17,7 @@ concurrency:
 
 jobs:
   documentation-preview:
+    name: Documentation preview
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:

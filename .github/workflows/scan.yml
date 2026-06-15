@@ -30,6 +30,7 @@ concurrency:
 
 jobs:
   cve-scanner:
+    name: CVE Scanner
     timeout-minutes: 15
     runs-on: ubuntu-latest
     if: github.event_name != 'release'

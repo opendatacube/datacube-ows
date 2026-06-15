@@ -32,6 +32,7 @@ concurrency:
 
 jobs:
   dea-config:
+    name: Complementary config test
     timeout-minutes: 15
     runs-on: ubuntu-latest
 

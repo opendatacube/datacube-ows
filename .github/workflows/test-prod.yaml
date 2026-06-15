@@ -32,6 +32,7 @@ concurrency:
 
 jobs:
   prod-docker-compose-tests:
+    name: OWS production tests
     timeout-minutes: 15
     runs-on: ubuntu-latest
 

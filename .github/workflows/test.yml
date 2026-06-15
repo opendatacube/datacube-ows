@@ -37,6 +37,7 @@ concurrency:
 
 jobs:
   unit-integration-performance-tests:
+    name: Unit/integration tests
     timeout-minutes: 45
     runs-on: ubuntu-latest
     permissions:

@@ -26,6 +26,7 @@ concurrency:
 
 jobs:
   pyspellcheck:
+    name: Spell check
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:

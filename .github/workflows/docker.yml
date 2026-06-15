@@ -23,6 +23,7 @@ permissions: {}
 
 jobs:
   build-and-push-image:
+    name: Build Docker image and push to GHCR
     timeout-minutes: 15
     runs-on: ubuntu-latest
 
