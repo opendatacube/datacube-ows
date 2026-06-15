@@ -37,10 +37,11 @@ concurrency:
 
 jobs:
   unit-integration-performance-tests:
+    name: Unit/integration tests
     timeout-minutes: 45
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
+      id-token: write  # For CodeCov/PyPi OIDC login
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
@@ -73,7 +74,7 @@ jobs:
       - name: Test and lint dev OWS image
         run: |
           mkdir artifacts
-          docker run -e LOCAL_UID=$(id -u $USER) -e LOCAL_GID=$(id -g $USER) -v ./:/src -v ${PWD}/artifacts:/mnt/artifacts ${{ env.DOCKER_IMAGE }} /bin/sh -c "cd /src && ./check-code.sh"
+          docker run -e LOCAL_UID=$(id -u $USER) -e LOCAL_GID=$(id -g $USER) -v ./:/src -v ${PWD}/artifacts:/mnt/artifacts ${DOCKER_IMAGE} /bin/sh -c "cd /src && ./check-code.sh"
           mv ./artifacts/coverage.xml ./artifacts/coverage-unit.xml
 
       - name: Dockerized Integration Pytest
@@ -94,6 +95,9 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          # Prevent cache poisoning for releases.
+          enable-cache: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
       - name: Build Packages
         run: |
