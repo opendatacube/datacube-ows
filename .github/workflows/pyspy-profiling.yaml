@@ -92,8 +92,10 @@ jobs:
         docker compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml \
         exec -T ows /bin/sh -c "cd /code && ./test_urls.sh &"
         docker compose -f docker-compose.yaml -f docker-compose.db.yaml -f docker-compose.pyspy.yaml \
-        run pyspy record -f speedscope -o ./artifacts/profile.json --duration 30 \
-        --pid ${{steps.set-output-container-id.outputs.PID}} --subprocesses
+          run pyspy record -f speedscope -o ./artifacts/profile.json --duration 30 \
+          --pid $TARGET_PID --subprocesses
+      env:
+        TARGET_PID: ${{ steps.set-output-container-id.outputs.PID }}
 
     - name: Stop py-spy profiling after timeout (stage 1 - stop profiling)
       run: |
