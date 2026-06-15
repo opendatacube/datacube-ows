@@ -6,8 +6,7 @@ on:
     types:
       - opened
 
-permissions:
-  pull-requests: write
+permissions: {}
 
 # When a PR is updated, cancel the jobs from the previous version. Merges
 # do not define head_ref, so use run_id to never cancel those jobs.
@@ -20,6 +19,8 @@ jobs:
     name: Documentation preview
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write # For writing the URL to the pull request description
     steps:
       - uses: readthedocs/actions/preview@b8bba1484329bda1a3abe986df7ebc80a8950333 # v1.5
         with:
