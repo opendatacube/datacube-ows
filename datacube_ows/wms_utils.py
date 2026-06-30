@@ -98,7 +98,9 @@ def _get_geobox_xy(cfg: OWSConfig, args, crs: CRS) -> tuple[float, float, float,
     return minx, miny, maxx, maxy
 
 
-def _get_geobox(cfg: OWSConfig, args, crs: CRS) -> GeoBox:
+def _get_geobox(
+    cfg: OWSConfig, args, crs: CRS, apply_antimeridian_hack: bool = True
+) -> GeoBox:
     width = int(args["width"])
     height = int(args["height"])
     minx, miny, maxx, maxy = _get_geobox_xy(cfg, args, crs)
@@ -123,13 +125,6 @@ def _get_geobox(cfg: OWSConfig, args, crs: CRS) -> GeoBox:
         crs = hack_crs
 
     return create_geobox(crs, minx, miny, maxx, maxy, width, height)
-
-
-def _get_polygon(cfg: OWSConfig, args, crs: CRS) -> geom.Geometry:
-    minx, miny, maxx, maxy = _get_geobox_xy(cfg, args, crs)
-    return geom.polygon(
-        [(minx, maxy), (minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)], crs
-    )
 
 
 def zoom_factor(cfg: OWSConfig, args, crs) -> float:
@@ -379,21 +374,22 @@ class GetParameters:
         # Layers
         self.layer = self.get_layer(cfg, args)
 
-        self.geometry = _get_polygon(cfg, args, self.crs)
-        # BBox, height and width parameters
-
         # Potentially apply an antimeridian hack if the native CRS is not EPSG:4236
         # (main logic is in _get_geobox())
         apply_antimeridian_hack = (
             CRS(self.layer.cfg_native_crs).epsg not in NATIVE_AM_BYPASS_CODES
         )
+
+        # BBox, height and width parameters
         self.geobox = _get_geobox(self.cfg, args, self.crs, apply_antimeridian_hack)
         if apply_antimeridian_hack and self.geobox.crs != self.crs:
             # If Web-merc antimeridian hack was applied in _get_geobox,
             # update the request CRS to match
             assert self.geobox.crs is not None  # For type checker.
             self.crs = self.geobox.crs
-            self.geometry = self.geometry.to_crs(self.crs)
+
+        # Extract geometry from (potentially hacked) geobox.
+        self.geometry = self.geobox.boundingbox.polygon
 
         # Time parameter
         self.times = get_times(args, self.layer)
@@ -535,7 +531,7 @@ class GetMapParameters(GetParameters):
         self.resampling = Resampling.nearest
 
         self.resources = RequestScale(
-            native_crs=CRS(self.layer.native_CRS),
+            native_crs=CRS(self.layer.cfg_native_crs),
             native_resolution=(self.layer.resolution_x, self.layer.resolution_y),
             geobox=self.geobox,
             n_dates=len(self.times),
@@ -612,7 +608,7 @@ def solar_correct_data(data, dataset) -> float:
     native_x = (dataset.bounds.right + dataset.bounds.left) / 2.0
     native_y = (dataset.bounds.top + dataset.bounds.bottom) / 2.0
     pt = geom.point(native_x, native_y, dataset.crs)
-    geo_pt = pt.to_crs("epsg:4326")
+    geo_pt = pt.to_crs(f"epsg:{EPSG_WGS84}")
     data_time = dataset.center_time.astimezone(UTC)
     data_lon, data_lat = geo_pt.coords[0]
 
