@@ -347,6 +347,47 @@ def test_get_geobox() -> None:
     OWSConfig._instance = None
 
 
+def test_antimeridian_geobox() -> None:
+    from datacube_ows.ows_configuration import OWSConfig, get_config
+
+    mock_cfg = MagicMock()
+    mock_cfg.published_CRSs = {
+        "EPSG:3857": {  # Web Mercator
+            "vertical_coord_first": False,
+        },
+        "EPSG:3832": {  # Pacific Web Mercator
+            "vertical_coord_first": False,
+        },
+        "EPSG:4326": {  # WGS-84
+            "vertical_coord_first": True,
+        },
+    }
+    OWSConfig._instance = mock_cfg
+    cfg = get_config()
+    gbox = datacube_ows.wms_utils._get_geobox(
+        cfg,
+        args={
+            "width": "256",
+            "height": "256",
+            "bbox": "-19998372.584307235,-2074195.199546542,-19959236.82582522,-2035059.4410645328",
+        },
+        crs=CRS("EPSG:3857"),
+    )
+    assert gbox.affine
+    assert str(gbox.crs) == "EPSG:3832"
+    gbox = datacube_ows.wms_utils._get_geobox(
+        cfg,
+        args={
+            "width": "256",
+            "height": "256",
+            "bbox": "-998372.584307235,-2074195.199546542,-959236.82582522,-2035059.4410645328",
+        },
+        crs=CRS("EPSG:3857"),
+    )
+    assert gbox.affine
+    assert str(gbox.crs) == "EPSG:3857"
+
+
 def test_invalid_bbox() -> None:
     from datacube_ows.ows_configuration import OWSConfig, get_config
 

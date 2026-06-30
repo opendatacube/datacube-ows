@@ -46,6 +46,15 @@ RESAMPLING_METHODS = {
     "average": Resampling.average,
 }
 
+# EPSG codes for antimeridian hack
+EPSG_WGS84 = 4326
+EPSG_WEB_MERC = 3857
+EPSG_PACIFIC_WEB_MERC = 3832
+
+# Native EPSG codes to bypass antimeridian hack for:
+# TODO: Allow declaration of antimeridian bypass per declared CRS in config.
+NATIVE_AM_BYPASS_CODES = {EPSG_WGS84, EPSG_WEB_MERC}
+
 
 def _bounding_pts(
     minx: float,
@@ -89,7 +98,9 @@ def _get_geobox_xy(cfg: OWSConfig, args, crs: CRS) -> tuple[float, float, float,
     return minx, miny, maxx, maxy
 
 
-def _get_geobox(cfg: OWSConfig, args, crs: CRS) -> GeoBox:
+def _get_geobox(
+    cfg: OWSConfig, args, crs: CRS, apply_antimeridian_hack: bool = True
+) -> GeoBox:
     width = int(args["width"])
     height = int(args["height"])
     minx, miny, maxx, maxy = _get_geobox_xy(cfg, args, crs)
@@ -97,23 +108,23 @@ def _get_geobox(cfg: OWSConfig, args, crs: CRS) -> GeoBox:
     if minx == maxx or miny == maxy:
         raise WMSException("Bounding box must enclose a non-zero area")
 
-    if crs.epsg == 3857 and (maxx < -13_000_000 or minx > 13_000_000):
-        # EPSG:3857 query AND closer to the anti-meridian than the prime meridian:
+    if (
+        apply_antimeridian_hack
+        and crs.epsg == EPSG_WEB_MERC
+        and (maxx < -13_000_000 or minx > 13_000_000)
+    ):
+        # IF we are applying the AM hack (see GetParameters.__init__() below)
+        # AND this is a EPSG:3857 query
+        # AND is closer to the anti-meridian than the prime meridian:
         # re-project to epsg:3832 (Pacific Web-Mercator)
-        ll = geom.point(x=minx, y=miny, crs=crs).to_crs("epsg:3832")
-        ur = geom.point(x=maxx, y=maxy, crs=crs).to_crs("epsg:3832")
+        hack_crs = CRS(f"epsg:{EPSG_PACIFIC_WEB_MERC}")
+        ll = geom.point(x=minx, y=miny, crs=crs).to_crs(hack_crs)
+        ur = geom.point(x=maxx, y=maxy, crs=crs).to_crs(hack_crs)
         minx, miny = ll.coords[0]
         maxx, maxy = ur.coords[0]
-        crs = CRS("epsg:3832")
+        crs = hack_crs
 
     return create_geobox(crs, minx, miny, maxx, maxy, width, height)
-
-
-def _get_polygon(cfg: OWSConfig, args, crs: CRS) -> geom.Geometry:
-    minx, miny, maxx, maxy = _get_geobox_xy(cfg, args, crs)
-    return geom.polygon(
-        [(minx, maxy), (minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)], crs
-    )
 
 
 def zoom_factor(cfg: OWSConfig, args, crs) -> float:
@@ -129,7 +140,7 @@ def zoom_factor(cfg: OWSConfig, args, crs) -> float:
     # "standardised" in some sense, not dependent on the CRS of the request.
     # TODO: can we do better in polar regions?
     minx, miny, maxx, maxy = _bounding_pts(
-        minx, miny, maxx, maxy, crs, dst_crs="epsg:4326"
+        minx, miny, maxx, maxy, crs, dst_crs=f"epsg:{EPSG_WGS84}"
     )
     # Create geobox affine transformation (N.B. Don't need an actual Geobox)
     affine = Affine.translation(minx, miny) * Affine.scale(
@@ -363,14 +374,22 @@ class GetParameters:
         # Layers
         self.layer = self.get_layer(cfg, args)
 
-        self.geometry = _get_polygon(cfg, args, self.crs)
+        # Potentially apply an antimeridian hack if the native CRS is not EPSG:4236
+        # (main logic is in _get_geobox())
+        apply_antimeridian_hack = (
+            CRS(self.layer.cfg_native_crs).epsg not in NATIVE_AM_BYPASS_CODES
+        )
+
         # BBox, height and width parameters
-        self.geobox = _get_geobox(self.cfg, args, self.crs)
-        # Web-merc antimeridian hack:
-        if self.geobox.crs != self.crs:
+        self.geobox = _get_geobox(self.cfg, args, self.crs, apply_antimeridian_hack)
+        if apply_antimeridian_hack and self.geobox.crs != self.crs:
+            # If Web-merc antimeridian hack was applied in _get_geobox,
+            # update the request CRS to match
             assert self.geobox.crs is not None  # For type checker.
             self.crs = self.geobox.crs
-            self.geometry = self.geometry.to_crs(self.crs)
+
+        # Extract geometry from (potentially hacked) geobox.
+        self.geometry = self.geobox.boundingbox.polygon
 
         # Time parameter
         self.times = get_times(args, self.layer)
@@ -512,7 +531,7 @@ class GetMapParameters(GetParameters):
         self.resampling = Resampling.nearest
 
         self.resources = RequestScale(
-            native_crs=CRS(self.layer.native_CRS),
+            native_crs=CRS(self.layer.cfg_native_crs),
             native_resolution=(self.layer.resolution_x, self.layer.resolution_y),
             geobox=self.geobox,
             n_dates=len(self.times),
@@ -589,7 +608,7 @@ def solar_correct_data(data, dataset) -> float:
     native_x = (dataset.bounds.right + dataset.bounds.left) / 2.0
     native_y = (dataset.bounds.top + dataset.bounds.bottom) / 2.0
     pt = geom.point(native_x, native_y, dataset.crs)
-    geo_pt = pt.to_crs("epsg:4326")
+    geo_pt = pt.to_crs(f"epsg:{EPSG_WGS84}")
     data_time = dataset.center_time.astimezone(UTC)
     data_lon, data_lat = geo_pt.coords[0]
 
