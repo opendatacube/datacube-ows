@@ -488,7 +488,7 @@ class RampLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
         cdict, ticks = self.create_cdict_ticks()
         plt.rcdefaults()
         if self.mpl_rcparams:
-            plt.rcParams.update(self.mpl_rcparams)
+            plt.rcParams.update(self.mpl_rcparams)  # type: ignore[arg-type]
         fig = plt.figure(figsize=(self.width, self.height))
         ax = fig.add_axes(self.strip_location)
         custom_map = LinearSegmentedColormap(self.plot_name(), cdict)  # type: ignore[arg-type]

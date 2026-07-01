@@ -347,7 +347,7 @@ class ColorMapLegendBase(StyleDefBase.Legend, OWSMetadataConfig):
         ]
         plt.rcdefaults()
         if self.mpl_rcparams:
-            plt.rcParams.update(self.mpl_rcparams)
+            plt.rcParams.update(self.mpl_rcparams)  # type: ignore[arg-type]
         plt.figure(figsize=(self.width, self.height))
         plt.axis("off")
         if self.title:

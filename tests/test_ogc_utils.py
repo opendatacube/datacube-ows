@@ -366,6 +366,9 @@ def test_time_call(monkeypatch) -> None:
                 cls._instance = super().__new__(cls)
             return cls._instance
 
+        def __init__(self, *args, **kwargs):
+            self.manager = MagicMock()
+
         def debug(self, template, *args) -> None:
             self.slot = template % args
 
@@ -397,6 +400,9 @@ def test_log_call(monkeypatch) -> None:
             if not cls._instance:
                 cls._instance = super().__new__(cls)
             return cls._instance
+
+        def __init__(self, *args, **kwargs):
+            self.manager = MagicMock()
 
         def debug(self, template, *args) -> None:
             self.slot = template % args
