@@ -7,7 +7,7 @@ History
 
 Datacube-ows version 1.9.x releases are designed to work with datacube-core versions 1.9.x.
 
-1.9.16 (2026-07-01)
+1.9.15 (2026-07-01)
 -------------------
 
 Maintenance release. Includes several bug fixes affecting specific corner cases.
