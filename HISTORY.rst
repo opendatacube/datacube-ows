@@ -7,6 +7,63 @@ History
 
 Datacube-ows version 1.9.x releases are designed to work with datacube-core versions 1.9.x.
 
+1.9.16 (2026-07-01)
+-------------------
+
+Maintenance release. Includes several bug fixes affecting specific corner cases.
+
+First OWS release requiring Python 3.12 as a minimum requirement.
+
+What's Changed
+--------------
+
+* styles: import datacube.virtual locally by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1604
+* Patch to fix bug in feature info affecting overlapping CRS regions by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1606
+* styles: import formula_parser from core by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1608
+* readthedocs: use Ubuntu 26.04/Python 3.14 by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1619
+* Require Python 3.12 by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1417
+* Bypass spatial search by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1627
+* CI: add attestation permissions by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1629
+* CI: fix some Zizmor complaints by @pjonsson in https://github.com/opendatacube/datacube-ows/pull/1632
+* Bypass antimeridian hack for global 4326 products by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1640
+* Prepare for 1.9.15 release products by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1644
+
+Automated Updates
+-----------------
+
+* build(deps): bump mambaorg/micromamba from 2.6.1 to 2.6.2 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1603
+* build(deps): bump astral-sh/uv from 0.11.15 to 0.11.16 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1607
+* build(deps): bump github/codeql-action from 4.35.4 to 4.35.5 in the actions-deps group by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1609
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1610
+* build(deps): bump astral-sh/uv from 0.11.16 to 0.11.17 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1611
+* build(deps): bump the actions-deps group with 6 updates by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1613
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1614
+* build(deps): bump astral-sh/uv from 0.11.17 to 0.11.19 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1617
+* build(deps): bump mambaorg/micromamba from 2.6.2 to 2.7.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1616
+* build(deps): bump mambaorg/micromamba from 2.7.0 to 2.8.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1618
+* build(deps): bump osgeo/gdal from ubuntu-small-3.13.0 to ubuntu-small-3.13.1 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1620
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1621
+* build(deps): bump mambaorg/micromamba from 2.8.0 to 2.8.1 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1622
+* build(deps): bump astral-sh/uv from 0.11.19 to 0.11.20 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1624
+* build(deps): bump mambaorg/micromamba from `fdc1f6b` to `fb18405` by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1625
+* build(deps): bump astral-sh/uv from 0.11.20 to 0.11.21 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1626
+* build(deps): bump tornado from 6.5.5 to 6.5.6 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1628
+* build(deps): bump the actions-deps group with 3 updates by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1630
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1631
+* build(deps): bump tornado from 6.5.6 to 6.5.7 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1633
+* build(deps): bump astral-sh/uv from 0.11.21 to 0.11.22 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1634
+* build(deps): bump msgpack from 1.1.2 to 1.2.1 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1635
+* build(deps): bump astral-sh/uv from 0.11.22 to 0.11.23 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1636
+* build(deps): bump codecov/codecov-action from 6.0.1 to 7.0.0 in the actions-deps group by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1637
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1638
+* build(deps): bump astral-sh/uv from 0.11.23 to 0.11.24 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1639
+* build(deps): bump actions/checkout from 6.0.3 to 7.0.0 in the actions-deps group by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1642
+* build(deps): bump astral-sh/uv from 0.11.24 to 0.11.25 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1641
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1643
+
+
+**Full Changelog**: https://github.com/opendatacube/datacube-ows/compare/1.9.14...1.9.15
+
 1.9.14 (2026-05-20)
 -------------------
 
