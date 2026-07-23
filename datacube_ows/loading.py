@@ -194,7 +194,7 @@ class DataStacker:
     def n_datasets(self) -> int:
         if self.style:
             # we have a style - lets go with that.
-            queries = ProductBandQuery.style_queries(self.style)
+            queries = ProductBandQuery.style_queries(self.style, self.resource_limited)
         else:
             # Just take needed bands.
             queries = [
@@ -221,7 +221,7 @@ class DataStacker:
     def dsids(self) -> dict[ProductBandQuery, Iterable[UUID]]:
         if self.style:
             # we have a style - lets go with that.
-            queries = ProductBandQuery.style_queries(self.style)
+            queries = ProductBandQuery.style_queries(self.style, self.resource_limited)
         else:
             # Just take needed bands.
             queries = [
@@ -254,7 +254,7 @@ class DataStacker:
     ) -> dict[ProductBandQuery, xarray.DataArray]:
         if self.style:
             # we have a style - lets go with that.
-            queries = ProductBandQuery.style_queries(self.style)
+            queries = ProductBandQuery.style_queries(self.style, self.resource_limited)
         elif all_flag_bands:
             queries = ProductBandQuery.full_layer_queries(
                 self._layer, self.needed_bands()
