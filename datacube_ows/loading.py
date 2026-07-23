@@ -194,7 +194,7 @@ class DataStacker:
     def n_datasets(self) -> int:
         if self.style:
             # we have a style - lets go with that.
-            queries = ProductBandQuery.style_queries(self.style)
+            queries = ProductBandQuery.style_queries(self.style, self.resource_limited)
         else:
             # Just take needed bands.
             queries = [
@@ -210,7 +210,7 @@ class DataStacker:
 
     def extent(self, crs: CRS | None = None) -> Geometry | None:
         query = ProductBandQuery.simple_layer_query(
-            self._layer, self.needed_bands(), self.resource_limited
+            self._layer, self.needed_bands(), resource_limited=self.resource_limited
         )
         geom = self._geobox.extent
         times = None if query.ignore_time else self._times
@@ -221,7 +221,7 @@ class DataStacker:
     def dsids(self) -> dict[ProductBandQuery, Iterable[UUID]]:
         if self.style:
             # we have a style - lets go with that.
-            queries = ProductBandQuery.style_queries(self.style)
+            queries = ProductBandQuery.style_queries(self.style, self.resource_limited)
         else:
             # Just take needed bands.
             queries = [
@@ -241,7 +241,7 @@ class DataStacker:
 
     def datasets_all_time(self, point: Geometry | None = None) -> xarray.DataArray:
         query = ProductBandQuery.simple_layer_query(
-            self._layer, self.needed_bands(), self.resource_limited
+            self._layer, self.needed_bands(), resource_limited=self.resource_limited
         )
         geom = point or self._geobox.extent
         result = self._layer.ows_index().ds_search(
@@ -254,7 +254,7 @@ class DataStacker:
     ) -> dict[ProductBandQuery, xarray.DataArray]:
         if self.style:
             # we have a style - lets go with that.
-            queries = ProductBandQuery.style_queries(self.style)
+            queries = ProductBandQuery.style_queries(self.style, self.resource_limited)
         elif all_flag_bands:
             queries = ProductBandQuery.full_layer_queries(
                 self._layer, self.needed_bands()
