@@ -58,7 +58,7 @@ def create_legends_from_styles(
 
     if not imgs:
         return None
-    min_shape = sorted([(np.sum(i.size), i.size) for i in imgs])[0][1]
+    min_shape = min([(np.sum(i.size), i.size) for i in imgs])[1]
     imgs_comb = np.vstack([np.asarray(i.resize(min_shape)) for i in imgs])
     imgs_comb = Image.fromarray(imgs_comb)
     b = io.BytesIO()

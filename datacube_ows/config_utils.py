@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 _LOG: logging.Logger = logging.getLogger(__name__)
 
 RAW_CFG: TypeAlias = (
-    None | str | int | float | bool | list["RAW_CFG"] | dict[str, "RAW_CFG"]
+    str | int | float | bool | list["RAW_CFG"] | dict[str, "RAW_CFG"] | None
 )
 
 CFG_DICT: TypeAlias = dict[str, RAW_CFG]
