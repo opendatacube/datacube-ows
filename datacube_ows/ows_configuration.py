@@ -761,7 +761,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
         self.default_time: datetime.datetime | datetime.date | None = None
         self.band_idx = BandIndex(self, cast("CFG_DICT", cfg.get("bands")))
         self.cfg_native_resolution = cast(
-            "None | tuple[int | float, int | float]", cfg.get("native_resolution")
+            "tuple[int | float, int | float] | None", cfg.get("native_resolution")
         )
         self.cfg_native_crs = cast("str", cfg.get("native_crs"))
         self.declare_unready("resolution_x")
@@ -1024,7 +1024,7 @@ class OWSNamedLayer(OWSExtensibleConfigEntry, OWSLayer):
                     self.name,
                 )
                 self.cfg_native_resolution = cast(
-                    "None | tuple[int | float, int | float]",
+                    "tuple[int | float, int | float] | None",
                     cfg.get("native_resolution"),
                 )
             else:
