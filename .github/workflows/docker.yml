@@ -11,6 +11,10 @@ on:
       - '!*.rst'
       - '!*.md'
       - '!datacube_ows/__init__.py'
+      - '!complementary_config_test/**'
+      - '!integration_tests/**'
+      - '!tests/**'
+      - '!wms_xsds/**'
 
   release:
     types: [published]
