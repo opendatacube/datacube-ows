@@ -94,7 +94,8 @@ jobs:
           push-to-registry: true
 
       - name: Sign the Docker image
+        shell: bash
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
           DIGEST: ${{ steps.push.outputs.digest }}
-        run: echo "${TAGS}" | xargs -I {} cosign sign --yes --recursive {}@${DIGEST}
+        run: (r=5;while ! echo "${TAGS}" | xargs -I {} cosign sign --yes --recursive {}@${DIGEST} ; do ((--r))||exit;sleep 15;done)
