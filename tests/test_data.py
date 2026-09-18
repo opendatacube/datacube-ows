@@ -10,14 +10,18 @@ from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
+from affine import Affine
+from odc.geo.geobox import GeoBox
 from odc.geo.geom import polygon
 from xarray import Dataset
 
 import datacube_ows.data
 import datacube_ows.feature_info
+from datacube_ows.data import _write_empty, _write_polygon
 from datacube_ows.feature_info import get_s3_browser_uris
 from datacube_ows.loading import DataStacker, ProductBandQuery
 from datacube_ows.ogc_exceptions import WMSException
+from datacube_ows.ows_configuration import TimeRes
 from tests.test_styles import product_layer  # noqa: F401
 
 
@@ -335,3 +339,94 @@ def test_create_nodata(dummy_raw_calc_data) -> None:
     assert "Cannot add default flag data as there is no non-flag data available" in str(
         e.value
     )
+
+
+@pytest.fixture
+def simple_geobox() -> GeoBox:
+    affine_transform = Affine(0.1, 0.0, 140.0, 0.0, -0.1, -34.0)
+    return GeoBox((10, 10), affine_transform, "EPSG:4326")
+
+
+@pytest.fixture
+def sorter_geom():
+    minx, maxx = 140, 141
+    miny, maxy = -35, -34
+    crs = "EPSG:4326"
+    return polygon(
+        [(minx, maxy), (minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)], crs
+    )
+
+
+def test_write_empty(simple_geobox) -> None:
+    result = _write_empty(simple_geobox)
+    assert isinstance(result, bytes)
+    assert len(result) > 0
+    # PNG magic bytes
+    assert result[:4] == b"\x89PNG"
+
+
+def test_write_polygon_within(simple_geobox) -> None:
+    # A polygon that fully contains the geobox extent
+    big_polygon = polygon(
+        [(138, -33), (138, -36), (143, -36), (143, -33), (138, -33)], "EPSG:4326"
+    )
+    layer_mock = MagicMock()
+    zoom_fill = [100, 80, 60, 40]
+    result = _write_polygon(simple_geobox, big_polygon, zoom_fill, layer_mock)
+    assert isinstance(result, bytes)
+    assert len(result) > 0
+    assert result[:4] == b"\x89PNG"
+
+
+def test_write_polygon_partial(simple_geobox) -> None:
+    # A polygon that only partially overlaps with the geobox extent
+    partial_polygon = polygon(
+        [(140.3, -34.7), (140.3, -34.3), (140.7, -34.3), (140.7, -34.7), (140.3, -34.7)],
+        "EPSG:4326",
+    )
+    layer_mock = MagicMock()
+    zoom_fill = [100, 80, 60, 40]
+    result = _write_polygon(simple_geobox, partial_polygon, zoom_fill, layer_mock)
+    assert isinstance(result, bytes)
+    assert len(result) > 0
+    assert result[:4] == b"\x89PNG"
+
+
+def test_user_date_sorter_summary(sorter_geom) -> None:
+    layer = MagicMock()
+    layer.time_resolution = TimeRes.SUMMARY
+
+    odc_dates = [
+        np.datetime64(datetime.datetime(2019, 1, 1, 12, 0, 0), "ns"),
+        np.datetime64(datetime.datetime(2020, 1, 1, 12, 0, 0), "ns"),
+    ]
+
+    user_dates = [
+        datetime.date(2020, 1, 1),
+        datetime.date(2019, 1, 1),
+    ]
+
+    sorter = datacube_ows.data.user_date_sorter(layer, odc_dates, sorter_geom, user_dates)
+    assert sorter.values[0] == 1
+    assert sorter.values[1] == 0
+
+
+def test_user_date_sorter_subday(sorter_geom) -> None:
+    layer = MagicMock()
+    layer.time_resolution = TimeRes.SUBDAY
+
+    odc_dates = [
+        np.datetime64(datetime.datetime(2019, 6, 15, 8, 0, 0), "ns"),
+        np.datetime64(datetime.datetime(2019, 6, 16, 8, 0, 0), "ns"),
+    ]
+
+    # user_dates[0] is in the window of odc_dates[1], user_dates[1] is in the window of odc_dates[0]
+    user_dates = [
+        datetime.datetime(2019, 6, 16, 9, 0, 0),
+        datetime.datetime(2019, 6, 15, 9, 0, 0),
+    ]
+
+    sorter = datacube_ows.data.user_date_sorter(layer, odc_dates, sorter_geom, user_dates)
+    assert sorter.values[0] == 1
+    assert sorter.values[1] == 0
+
