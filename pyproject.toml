@@ -113,6 +113,9 @@ datacube-ows-update = "datacube_ows.update_ranges:main"
 postgis = "datacube_ows.index.postgis.api:ows_index_driver_init"
 postgres = "datacube_ows.index.postgres.api:ows_index_driver_init"
 
+[tool.esbonio.sphinx]
+pythonCommand = ["uv", "run", "python"]
+
 [tool.mypy]
 python_version = "3.12"
 allow_redefinition = true

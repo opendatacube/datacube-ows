@@ -4,8 +4,6 @@ OWS Configuration
 
 .. toctree::
    :maxdepth: 2
-   :hidden:
-   :glob:
 
    cfg_global
    cfg_wms
