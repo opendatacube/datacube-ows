@@ -86,6 +86,15 @@ test = [
     "pytest_localserver",
     "pytest_mock",
 ]
+doc = [
+    "datacube-ows[webserver]",
+    "Sphinx>=8.2.3",
+    "sphinx-click",
+    "sphinx-autobuild",
+    'pydata-sphinx-theme',
+    'sphinx-design',
+    'sphinx-toolbox',
+]
 webserver = [
     "babel",
     "flask",
@@ -93,7 +102,7 @@ webserver = [
     "matplotlib",
     "prometheus_flask_exporter",
 ]
-all = ["datacube_ows[dev,ops,test]"]
+all = ["datacube_ows[dev,ops,test,doc]"]
 
 [project.scripts]
 datacube-ows = "datacube_ows.wsgi:main"
