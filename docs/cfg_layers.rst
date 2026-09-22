@@ -375,7 +375,7 @@ Time Resolution (time_resolution)
 The "time_resolution" specifies how data timestamps on the data
 are mapped to user-accessible dates. The acceptable values are:
 
-* "solar" (default)
+`solar` (default)
   Data is expected to have a center-time reflecting when
   the data was captured.  This is mapped to a local solar day.
   (i.e. the date below the satellite at the time, not relative
@@ -385,12 +385,12 @@ are mapped to user-accessible dates. The acceptable values are:
   supported for backwards compatibility, but will raise a deprecation
   warning advising to use "solar" instead.
 
-* "subday"
+`subday`
   The raw start datetime of datasets are used with the time portion intact.
 
   Used for hourly, minutely or other sub-day-resolution data.
 
-* "summary"
+`summary`
   Data has time dimension based on the start date of start datetime of datasets,
   which are expected to have a `00:00:00.0000+00` time portion.
 
@@ -398,13 +398,17 @@ are mapped to user-accessible dates. The acceptable values are:
 
   Note that because only the start date is used, overlapping date ranges like:
 
-  `2020-01-01 -> 2021-01-01`
-  `2021-01-01 -> 2022-01-01`
+  ::
+
+    2020-01-01 -> 2021-01-01
+    2021-01-01 -> 2022-01-01
 
   or:
 
-  `2019-01-01 -> 2021-12-31 23:59:59`
-  `2020-01-01 -> 2022-12-31 23:59:59`
+  ::
+
+    2019-01-01 -> 2021-12-31 23:59:59
+    2020-01-01 -> 2022-12-31 23:59:59
 
   are now both supported.
 
@@ -626,11 +630,11 @@ available to a single request).  Datacube-ows provides several
 mechanisms to avoid excessive resource consumption by either:
 
 1. progressively increasing the cache-control header max-age value to
-allow expensive requests to be cached for longer and prevent cheap
-requests from flooding the cache; and/or
+   allow expensive requests to be cached for longer and prevent cheap
+   requests from flooding the cache; and/or
 
 2. terminating potentially expensive queries early, preventing them
-from consuming excessive resources.
+   from consuming excessive resources.
 
 These mechanisms are configured in the "resource_limits" section,
 which is a dictionary with two independent sub-sections
@@ -1391,7 +1395,9 @@ Restrictions on inheritance
 +++++++++++++++++++++++++++
 
 1. Note that a layer can only inherit by name from a parent layer that has already been parsed
-   by the config parser - i.e. it must appear earlier in the layer hierarchy.  This restriction
+   by the config parser - 
+   
+   i.e. it must appear earlier in the layer hierarchy.  This restriction
    can be avoided using direct inheritance.
 
 2. When inheriting from a multi-product layer, you must explicitly specify that it is a multi-product

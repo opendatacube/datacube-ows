@@ -209,22 +209,22 @@ E.g.:
 
 .. _published-crss:
 
-Co-ordinate Reference Systems (published_CRSs)
+Coordinate Reference Systems (published_CRSs)
 ==============================================
 
-The "published_CRSs" entry in the global sections declares the list of Co-ordinate
+The "published_CRSs" entry in the global sections declares the list of Coordinate
 Reference Systems supported by the server instance.
 
 It should be a dictionary of dictionaries, with the labels being recognised by Proj4
 (ideally EPSG codes, as in the example).  Other CRS formats (i.e. ESRI style WKID)
 can be supported by adding them as aliases in your proj4 configuration.
 
-The configuration for each Co-ordinate Reference System
+The configuration for each Coordinate Reference System
 contains the following entries:
 
 geographic
    Boolean indicating whether the projection is geographic, i.e. uses degrees latitude and longitude
-   as it's co-ordinates. Required.  Note that at least one geographic CRS must be published.
+   as it's coordinates. Required.  Note that at least one geographic CRS must be published.
 
 horizontal_coord
    The label of the horizontal coordinate.  Defaults to "longitude".
