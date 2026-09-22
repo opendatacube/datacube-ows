@@ -42,17 +42,17 @@ The differences between stand-alone styles and true OWS styles are:
 
 3. The various OWS-specific band-aliasing techniques are not available.
 
-    It is up to the the user of the API to ensure the band names in the style definition exactly
-    match the data variable names in the XArray Dataset being styled.
+   It is up to the the user of the API to ensure the band names in the style definition exactly
+   match the data variable names in the XArray Dataset being styled.
 
-    Make sure you reference measurement bands from the source product using the same names
-    that you requested in the `dc.load()` statement.
+   Make sure you reference measurement bands from the source product using the same names
+   that you requested in the `dc.load()` statement.
 
 4. Function objects/callables can be used directly in stand-alone style definitions.
 
-    Full OWS Configurations must be serialisable, so functions can only be embedded as
-    fully qualified python names.  For stand-alone styles, raw callable functions can be
-    used.  Some examples are shown below.
+   Full OWS Configurations must be serialisable, so functions can only be embedded as
+   fully qualified python names.  For stand-alone styles, raw callable functions can be
+   used.  Some examples are shown below.
 
 Stand-alone style objects are created by passing a valid style configuration to the
 ``StandaloneStyle`` constructor:

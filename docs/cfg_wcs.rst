@@ -64,6 +64,7 @@ NetCDF formats and look something like this:
 Renderer is set using OWS's :doc:`function configuration format <cfg_functions>`.
 
 For WCS1, The function is expected to take the following arguments:
+
   * A WCSRequest object
   * An xarray.DataArray to render
 
@@ -84,7 +85,7 @@ section) and must contain the name of one of the formats in
 defined in the
 :ref:`formats <supported-output-formats-formats>` section.
 
-GEOTiff Statistics (calculate_tiff_statistics)
+GeoTIFF Statistics (calculate_tiff_statistics)
 ==============================================
 
 An optional boolean (defaults to True) that only applies for geotiff coverage responses.
@@ -93,7 +94,7 @@ It specifies whether or not channel statistics (max/min/avg/stddev) are calculat
 in TIFF metadata.  Calculating statistics results in better interoperability with some clients
 (e.g. QGIS) but results in increased memory usage when generating very large coverage files.
 
-We recommend leaving this setting false (the default) unless you particularly need to
+We recommend leaving this setting False (the default) unless you particularly need to
 support very large coverage files.
 
 ::

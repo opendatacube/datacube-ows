@@ -63,7 +63,7 @@ for generating GetCapabilities documents efficiently.
 Creating/Maintaining the OWS Schema
 -----------------------------------
 
-Creating or updating an OWS schema is performed with following options to ``datacube-ows-update``.
+Creating or updating an OWS schema is performed with following options to :program:`datacube-ows-update`.
 
 Note that the options in this section requires database superuser/admin privileges.
 
@@ -71,7 +71,7 @@ Note that the options in this section requires database superuser/admin privileg
 Creating or Updating the OWS Schema
 ===================================
 
-The ``--schema`` option to ``datacube-ows-update`` creates a new OWS schema if it does not exist, or
+Running :option:`datacube-ows-update --schema` creates a new OWS schema if it does not exist, or
 updates to the form required by the installed version of ``datacube-ows``::
 
     datacube-ows-update --schema
@@ -159,9 +159,9 @@ and space views into a single space-time view) is done
 CONCURRENTLY. This means that it may not take effect until
 some minutes after ``datacube-ows-update`` exits.
 
-DO NOT ATTEMPT TO REFRESH VIEWS NON-CONCURRENTLY IN A PRODUCTION
-ENVIRONMENT. This will leave OWS broken and unable to respond to
-requests until the refresh is complete.
+.. warning:: DO NOT ATTEMPT TO REFRESH VIEWS NON-CONCURRENTLY IN A PRODUCTION ENVIRONMENT. 
+    
+   This will leave OWS broken and unable to respond to requests until the refresh is complete.
 
 In a production environment you should not be refreshing views
 much more than 2 or 3 times a day unless your database is small
