@@ -14,10 +14,12 @@ by applying a logical decision tree to the flag data for that pixel.
 Colour-map styles support the
 :ref:`elements common to all styles <styling-common-elements>`.
 
-Colour-map styles also have `value_map <#value-map>`_ entry that describes
+Colour-map styles also have :ref:`value_map <value-map>` entry that describes
 how the colour of individual pixels is determined.
 
 Colour-map styles support `automatic legend generation <#legend>`_.
+
+.. _value-map:
 
 ---------
 value_map
@@ -217,7 +219,7 @@ In addition to :ref:`standard animated handlers <styling-multi-date>`
 as supported by all style types, Colour Map Styles support two additional approaches
 to produce an non-animated image from a multi-date request:
 
-1. Using a variant of the `value_map`_ entry used for the single-date case. This
+1. Using a variant of the :ref:`value_map <value-map>` entry used for the single-date case. This
    is a much simpler way of achieving most use cases.
 2. Using an aggregator function, which allows for fully customisable behaviour but
    requires writing Python code.
@@ -226,7 +228,7 @@ Multi-date value_map
 ====================
 
 A value_map in a multi-date handler has the same general structure as the
-single date `value_map`_ described above.  The handler must serve a single
+single date :ref:`value_map <value-map>` described above.  The handler must serve a single
 number of date values.  The discussion here will assume an `allowed_count_range``
 of ``[2, 2]``, but higher values should work.
 
