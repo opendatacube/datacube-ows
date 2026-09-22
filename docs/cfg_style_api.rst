@@ -22,7 +22,7 @@ Stand-Alone Style Objects
 
 The OWS Styling API introduces the concept of stand-alone style objects, which are constructed from
 a standard OWS configuration
-`style definition <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#style-definitions>`_
+:ref:`style definition <styling-style-definitions>`
 dictionary.
 
 All style definition elements and features that are relevant to rendering an image are supported.

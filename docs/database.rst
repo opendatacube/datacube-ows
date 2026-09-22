@@ -187,6 +187,8 @@ as described above (after waiting a couple of minutes for the final refresh to c
 
 In a ``postgis`` driver production environment, this is the only required regular maintenance task.
 
+.. _database-updating-range-tables:
+
 ===========================================
 Updating range tables for individual layers
 ===========================================

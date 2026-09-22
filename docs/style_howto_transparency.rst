@@ -19,8 +19,8 @@ the semantics were the same: a float between 0.0 (fully transparent) and 1.0 (fu
 
 The remaining two approaches to transparency are the subject of this chapter.
 
-.. [1] Actually five, but one is `beyond the scope of this
-       HOWTO. <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#extent-mask-function-extent-mask-func>`_
+.. [1] Actually five, but one is :ref:`beyond the scope of this
+       HOWTO. <layers-extent-mask-func>`
 
 Masking
 +++++++
@@ -277,8 +277,7 @@ Example: Alpha masking in component styles
 &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 For this example, we return to the Queensland geomedian example data we used in the
-`at the start of this HOWTO guide.
-<https://datacube-ows.readthedocs.io/en/latest/style_howto_components.html#simple-linear-components>`_
+:ref:`at the start of this HOWTO guide. <howto-simple-linear-components>`
 
 This example uses a simple red-green-blue visualisation as the base image, with transparency based on
 NDVI - pixels with NDVI over 0.5 are shown fully opaque, pixels with NDVI <= 0.0 are shown fully

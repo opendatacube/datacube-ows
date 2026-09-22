@@ -12,7 +12,7 @@ each component channel of the image (red, green, blue and optionally
 alpha) is calculated independently from the data for that pixel.
 
 Component styles support the
-`elements common to all styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#common-elements>`_.
+:ref:`elements common to all styles <styling-common-elements>`.
 
 There are three additional settings specific to component styles:
 `scale_range <#style-scale-range>`, `components <#components>`
@@ -20,7 +20,7 @@ and `additional_bands <#additional-bands-additional-bands>`_.
 
 Component styles do NOT support automatic legend generation. If you
 want a legend you must provide an external
-`url <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#url>`__ to a pre-prepared image.
+:ref:`url <styling-url>` to a pre-prepared image.
 
 ----------
 components
@@ -37,8 +37,8 @@ component channel of the output image::
 Alpha is the opacity of each pixel.  When alpha is 0 the image pixel is
 fully transparent, when 255 fully opaque.  If not provided, the alpha channel
 is assumed to be always fully opaque (unless otherwise masked, e.g. by
-the `extent mask <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#extent-mask-function-extent-mask-func>`_
-or `style masking <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#bit-flag-masks-pq-masks>`_).
+the :ref:`extent mask <layers-extent-mask-func>`
+or :ref:`style masking <styling-pq-masks>`).
 
 Calculating the value for each pixel has two steps:
 
@@ -63,7 +63,7 @@ Linear Combination Components
 
 In a linear combination component, every entry (apart from
 `scale_range <#component-scale-range>`__) maps a band name or
-alias from the `band dictionary <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#bands-dictionary-bands>`_
+alias from the :ref:`band dictionary <layers-bands-dictionary>`
 to a floating point multiplier.  The pixel data values from these bands
 are then multiplied by these multipliers and summed to produce the
 unscaled channel value.
@@ -198,7 +198,7 @@ If you are unfortunate enough to have raw data with a band named "scale_range"
 (or "function" which would cause the component to be treated as a
 `callback function component <#callback-function-components>`_), you can
 still access it here by defining an alias for the band in the
-`band dictionary <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#bands-dictionary-bands>`_.
+:ref:`band dictionary <layers-bands-dictionary>`.
 
 E.g.::
 
@@ -223,6 +223,8 @@ E.g.::
                 "func": 1.0
             },
         }
+
+.. _component-callback-function:
 
 Callback Function Components
 +++++++++++++++++++++++++++++
@@ -289,7 +291,7 @@ components), then these additional required bands must be declared
 with the `additional_bands` list.
 
 The `additional_bands` should be a list of band names or aliases from
-the `band dictionary <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#bands-dictionary-bands>`__.  It is
+the :ref:`band dictionary <layers-bands-dictionary>`.  It is
 optional (defaults to an empty list).  It is safe (but not
 necessary) to declare bands in `additional_bands` that are used
 directly by a linear combination component in the style.

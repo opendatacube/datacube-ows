@@ -47,6 +47,8 @@ style "a_style" would be the default.
         ]
     }
 
+.. _styling-style-definitions:
+
 Style Definitions
 -----------------
 
@@ -82,11 +84,13 @@ There are four distinct possible types of style.
 Each style type has its own specific config entries as described in the
 pages linked above.
 
+.. _styling-inheritance:
+
 Inheritance
 ===========
 
 Styles may be
-`inherited <https://datacube-ows.readthedocs.io/en/latest/configuration.html#configuration-inheritance>`_
+:ref:`inherited <configuration-inheritance>`
 from previously defined styles.
 
 To lookup a style by name use the "style" and "layer" element in the inherits section.
@@ -108,6 +112,8 @@ Note that a style can only inherit by name from a parent style that has already 
 by the config parser - i.e. it must appear earlier in the layer hierarchy.  This restriction
 can be avoided using direct inheritance.
 
+
+.. _styling-common-elements:
 
 ---------------
 Common Elements
@@ -161,18 +167,20 @@ E.g.::
         },
     ]
 
+.. _styling-pq-masks:
+
 Bit-flag Masks (pq_masks)
 +++++++++++++++++++++++++
 
 The "pq_masks" section allows a style to mask the output image
 by the bit flags in any of the flag bands defined in the
-`Flag Processing Section <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#flag-processing-section-flags>`_
+:ref:`Flag Processing Section <layers-flag-processing>`
 for the layer.
 
 The pq_masks entry is a list of mask definitions.  Each mask definition contains:
 
 1. A ``band`` identifier, which refers to one of the flag-band identifiers defined in the
-   `Flag Processing Section <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#flag-processing-section-flags>`_
+   :ref:`Flag Processing Section <layers-flag-processing>`
    for the layer.
 2. A mask rule, using the
    :doc:`OWS Masking Syntax <cfg_masks>`
@@ -235,14 +243,14 @@ E.g.
 Feature Info Custom Style Includes (custom_includes)
 ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-In addition to the custom includes defined `at the layer level
-<https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#custom-layer-includes-custom-includes>`_,
+In addition to the custom includes defined :ref:`at the layer level <layers-custom-includes>`,
 custom includes can also be defined at the style level.  These are applied only if the GetFeatureInfo
 request specifies a style, and override and entries defined at the layer level.
 
-Style-level includes `behave identically
-<https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#custom-layer-includes-custom-includes>`_
+Style-level includes :ref:`behave identically <layers-custom-includes>`
 to layer level ``custom-includes`` entries.
+
+.. _styling-legend:
 
 Legend
 ++++++
@@ -260,6 +268,8 @@ url is returned for the style.  Optional - defaults to True if a the
 style type supports auto-legend generation, false otherwise.
 
 If false no other legend configuration entries have any effect.
+
+.. _styling-url:
 
 url
 @@@
@@ -284,7 +294,7 @@ E.g.::
      }
 
 If your instance of OWS
-`supports multiple languages <https://datacube-ows.readthedocs.io/en/latest/configuration.html#metadata-separation-and-internationalisation>`_
+:ref:`supports multiple languages <configuration-metadata-separation>`
 then you may supply separate urls pointing to different versions of the legend image for each of the configured
 ``supported_languages``.  In this case you MUST supply a legend image url for the default language
 (the first language listed in the global ``supported_languages`` entry), and this url will be used for
@@ -316,6 +326,8 @@ In the above example:
 * Italian is not a supported language, so the Italian url will be ignored.  Italian requests will get the default
   (English) legend.
 * Removing the English url from the `urls` dictionary will result in an error as English is the default language.
+
+.. _styling-multi-date:
 
 multi_date
 ++++++++++
@@ -379,7 +391,7 @@ E.g. ::
 All styles support time-series animation as a multi-date handler, as discussed below.
 
 Specific style types may support other forms of multi-date handlers. In particular,
-`Colour Ramp styles <https://datacube-ows.readthedocs.io/en/latest/cfg_colourramp_styles.html#multi-date-requests>`__
+:ref:`Colour Ramp styles <colourramp-multi-date-requests>`
 have additional specialised multi-date handler behaviour.
 
 Time Series Animation
@@ -406,8 +418,7 @@ measured in milliseconds and defaults to 1000 if not supplied.
 Feature Info Multi-Date Custom Includes (custom_includes)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-In addition to the custom includes defined `at the layer level
-<https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#custom-layer-includes-custom-includes>`_, and
+In addition to the custom includes defined :ref:`at the layer level <layers-custom-includes>`, and
 `at the style level, as described above <#feature-info-custom-style-includes-custom-includes>`_,
 If the GetFeatureInfo requests a style AND multiple dates, then the multi-date handler
 can define additional custom feature info.

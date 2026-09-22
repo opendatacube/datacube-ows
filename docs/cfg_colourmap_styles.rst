@@ -12,7 +12,7 @@ each pixel is mapped to one particular colour from a fixed pallet
 by applying a logical decision tree to the flag data for that pixel.
 
 Colour-map styles support the
-`elements common to all styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#common-elements>`_.
+:ref:`elements common to all styles <styling-common-elements>`.
 
 Colour-map styles also have `value_map <#value-map>`_ entry that describes
 how the colour of individual pixels is determined.
@@ -70,7 +70,7 @@ be a floating point number between 0.0 (fully transparent) and 1.0 (fully opaque
 and defaults to 1.0 (i.e. fully transparent).  The ``mask`` entry is boolean (default
 False).  Setting ``mask`` to true is the same equivalent to setting ``alpha`` to
 0.0.  (A third option would be to use the standard style
-`pq_masks <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#bit-flag-masks-pq-masks>`_.
+:ref:`pq_masks <styling-pq-masks>`.
 Bit-flag Masks (pq_masks)
 
 syntax.)
@@ -128,7 +128,7 @@ Colour map styles support automatic legend configuration.
 
 Automatic legend generation can be deactivated using the
 ``show_legend`` and ``url`` legend elements
-`common to all styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#legend>`_.
+:ref:`common to all styles <styling-legend>`.
 (``show_legend`` is ``True`` by default for colour-map styles.)
 
 A patch and label is added to the legend for each value rule in the
@@ -211,9 +211,9 @@ Multi-Date Requests
 -------------------
 
 Colour Map Styles support three approaches to
-`multi-date requests <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#multi-date>`_.
+:ref:`multi-date requests <styling-multi-date>`.
 
-In addition to `standard animated handlers <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#multi-date>`_
+In addition to :ref:`standard animated handlers <styling-multi-date>`
 as supported by all style types, Colour Map Styles support two additional approaches
 to produce an non-animated image from a multi-date request:
 

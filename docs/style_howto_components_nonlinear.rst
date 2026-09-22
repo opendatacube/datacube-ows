@@ -148,7 +148,7 @@ can implement the style above using the supplied normalised difference function 
 have to do is pass in the band names.
 
 A list of available band utility functions can be found
-`in the documentation <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html#band-utils-functions>`_.
+:ref:`in the documentation <functions-band-utils>`.
 
 Example: red-ndvi-blue (half scale)
 +++++++++++++++++++++++++++++++++++

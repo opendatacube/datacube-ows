@@ -14,7 +14,7 @@ each pixel, and that index value is mapped to a graduated colour ramp
 for display.
 
 Colour-ramp styles support the
-`elements common to all styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#common-elements>`_.
+:ref:`elements common to all styles <styling-common-elements>`.
 
 Colour-ramp styles support automatic legend generation. Specialised
 legend configuration is described `below <#legend-configuration>`__.
@@ -64,6 +64,8 @@ The bands needed for the calculation must be declared in
 the `needed_bands list <#needed-bands-list>`__
 entry.
 
+.. _colourramp-index-function:
+
 index_function
 ++++++++++++++
 
@@ -76,7 +78,7 @@ arguments handled by the
 :doc:`function configuration format <cfg_functions>`); and returns
 an xarray Dataset containing the index value.
 
-A `small library <https://datacube-ows.readthedocs.io/en/latest/cfg_functions.html#band-utils-functions>`_
+A :ref:`small library <functions-band-utils>`
 of general purpose band math functions
 are provided in ``datacube_ows.band_utils``.
 
@@ -221,7 +223,7 @@ Colour-ramp styles support automatic legend generation.
 
 Automatic legend generation can be deactivated using the
 ``show_legend`` and ``url`` legend elements
-`common to all styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#legend>`_.
+:ref:`common to all styles <styling-legend>`.
 (``show_legend`` is ``True`` by default for colour-ramp styles.)
 
 Legend Title
@@ -529,12 +531,14 @@ E.g.::
         },
     }
 
+.. _colourramp-multi-date-requests:
+
 -------------------
 Multi-Date Requests
 -------------------
 
 Colour Ramp Styles support customised non-animated handlers for
-`multi-date requests <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#multi-date>`_
+:ref:`multi-date requests <styling-multi-date>`
 by providing for an aggregator function that converts the multi-date index data
 into a dateless index, and apply either the style's colour ramp (i.e. the same
 as the single-date case), or a separate colour ramp.

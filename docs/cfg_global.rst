@@ -43,12 +43,13 @@ Notes:
 2. For non-legacy loader drivers, fuser functions must be specified as a string (fully
    qualified Python name).
 
+.. _cfg-global-metadata-separation:
+
 Metadata Separation and Internationalisation
 ============================================
 
 The following global configuration items are relevant to
-`metadata separation and internationalisation
-<https://datacube-ows.readthedocs.io/en/latest/configuration.html#metadata-separation-and-internationalisation>`_.
+:ref:`metadata separation and internationalisation <configuration-metadata-separation>`.
 
 Message File (message_file)
 ---------------------------
@@ -206,6 +207,8 @@ E.g.:
        "https://secure.domain.com/ows",
    ]
 
+.. _published-crss:
+
 Co-ordinate Reference Systems (published_CRSs)
 ==============================================
 
@@ -264,6 +267,8 @@ E.g.:
 
 If unsure of an `EPSG` code, search in http://epsg.io/
 
+
+.. _default-attribution-attribution:
 
 Default Attribution (attribution)
 =================================
@@ -326,6 +331,8 @@ E.g.
                 "format": "image/png",
             }
         },
+
+.. _cfg-global-optional-metadata:
 
 Other Optional Metadata
 =======================

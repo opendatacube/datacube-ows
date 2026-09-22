@@ -13,7 +13,7 @@ contains config entries that apply
 to the WCS services for all coverages.
 
 The ``wcs`` section must be supplied if the WCS service is
-activated (specified in the `global services <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#service-selection-services>`_
+activated (specified in the :ref:`global services <services>`
 section).
 
 
@@ -23,7 +23,7 @@ Supported output formats (formats)
 Specifies the supported WCS output formats.
 
 This section must be supplied if the WCS service is
-activated (specified in the `global services <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#service-selection-services>`_
+activated (specified in the :ref:`global services <services>`
 section) and must contain at least one output format.
 
 Support for GeoTIFF and and NetCDF is included in datacube_ows.  Adding
@@ -77,7 +77,7 @@ Specifies the default output format to use if the user does not
 specify a format.
 
 This entry must be supplied if the WCS service is
-activated (specified in the `global services <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#service-selection-services>`_
+activated (specified in the :ref:`global services <services>`
 section) and must contain the name of one of the formats in
 defined in the
 `formats <#supported-output-formats-formats>`_ section.
@@ -106,9 +106,11 @@ The ``caps_cache_maxage`` entry in the ``wcs`` section controls the value of the
 ``Cache-control`` HTTP header returned with WCS GetCapabilities responses.
 
 Refer to the documentation for
-`WMS GetCapabilities Caching <https://datacube-ows.readthedocs.io/en/latest/cfg_wms.html#GetCapabilities-Cache-Control-Headers-caps_cache_maxage>`_
+:ref:`WMS GetCapabilities Caching <wms-caps-cache-maxage>`
 for further information (the WCS behaviour is identical, except it applies to
 the WCS Capabilities document instead of WMS and WMTS).
+
+.. _wcs-desc-cache-maxage:
 
 DescribeCoverage Default Cache Control Headers (default_desc_cache_maxage)
 ==========================================================================
@@ -117,9 +119,9 @@ The ``default_desc_cache_maxage`` entry in the ``wcs`` section controls the defa
 ``Cache-control`` HTTP header returned with WCS DescribeCoverage responses.
 
 Behaviour is identical to the ``caps_cache_maxage`` entry discussed above and
-`WMS GetCapabilities Caching <https://datacube-ows.readthedocs.io/en/latest/cfg_wms.html#GetCapabilities-Cache-Control-Headers-caps_cache_maxage>`_.
+:ref:`WMS GetCapabilities Caching <wms-caps-cache-maxage>`.
 
 Note however, that the default DescribeCoverage cache rule for can
 be over-ridden at the layer/coverage level using the
-`describe_cache_maxage entry <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#cache-control-dataset-cache-rules-and-describe-cache-maxage>`_
+:ref:`describe_cache_maxage entry <layers-wcs-cache-control>`
 in the ``resource_limits`` section for the layer.

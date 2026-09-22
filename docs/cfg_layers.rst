@@ -84,7 +84,7 @@ and cumulative.  A layer will advertise all of:
 
 * The keywords defined for all parent folder layers in the layer hierarchy.
 
-* The keywords defined in the `global keywords <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#optional-metadata>`_ section.
+* The keywords defined in the :ref:`global keywords <cfg-global-optional-metadata>` section.
 
 E.g.:
 
@@ -103,12 +103,12 @@ Attribution is optional and is used by WMS only.
 
 Attribution is hierarchical - if not supplied the setting from the closest parent
 layer that has an attribution is used.  Or if no parent layers supply an attribution
-either then the default value defined in `the wms section <https://datacube-ows.readthedocs.io/en/latest/cfg_wms.html#default-attribution-attribution>`_
+either then the default value defined in :ref:`the wms section <default-attribution-attribution>`
 is used.  Or if there is no default value defined either, no attribution will be
 reported.
 
 The structure of the attribution section is the same as described in
-`the wms section <https://datacube-ows.readthedocs.io/en/latest/cfg_wms.html#default-attribution-attribution>`_.
+:ref:`the wms section <default-attribution-attribution>`.
 
 Folder Layers
 =============
@@ -120,8 +120,7 @@ child layers).
 
 A folder layer may also have a ``label`` element which is used only
 for
-`metadata separation and internationalisation
-<https://datacube-ows.readthedocs.io/en/latest/configuration.html#metadata-separation-and-internationalisation>`_.
+:ref:`metadata separation and internationalisation <configuration-metadata-separation>`.
 Each folder's layer
 must be globally unique.  A unique label based on the folder's position
 in the folder hierarchy is generated if one is not supplied.
@@ -405,7 +404,7 @@ Any time component in the request will be ignored, except for layers that explic
 have "subday" time resolution.
 
 Note that it will usually be necessary to rerun
-`datacube-ows-update <https://datacube-ows.readthedocs.io/en/latest/database.html#updating-range-tables-for-individual-layers>`_
+:ref:`datacube-ows-update <database-updating-range-tables>`
 for a layer after changing the time resolution.
 
 -------------------------------------
@@ -497,6 +496,8 @@ or
         "disable": True
     },
 
+.. _layers-bands-dictionary:
+
 ------------------------
 Bands Dictionary (bands)
 ------------------------
@@ -578,8 +579,7 @@ allows OWS to treat the entire layer as a single coverage, and
 are used for calculating request resource limits.
 
 The native_crs can be any CRS
-declared in the `global published_CRSs section
-<https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#co-ordinate-reference-systems-published-crss>`_
+declared in the :ref:`global published_CRSs section <published-crss>`
 and need not be related to the CRSs that the data is actually
 stored in.
 
@@ -874,6 +874,8 @@ request is satisfied from the
 depending on which limit(s) have been exceeded, and whether a low-resolution
 summary product has been defined. See the documentation for each limit below for details.
 
+.. _layers-wcs-cache-control:
+
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 Cache Control (dataset-cache-rules and describe_cache_maxage)
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -886,7 +888,7 @@ An additional element, ``describe_cache_maxage`` is also provided,
 which controls the cache control headers for WCS DescribeCoverage requests
 for the coverage/layer.  This element is optional, and defaults
 to the value set in the
-`top-level WCS section <https://datacube-ows.readthedocs.io/en/latest/cfg_wcs.html#describeconverage-default-cache-control-headers-default-desc-cache-maxage>`_
+:ref:`top-level WCS section <wcs-desc-cache-maxage>`
 
 ++++++++++++
 max_datasets
@@ -937,6 +939,8 @@ E.g.::
         "manual_merge": True,
         "apply_solar_corrections": True
     }
+
+.. _layers-extent-mask-func:
 
 Extent Mask Function (extent_mask_func)
 +++++++++++++++++++++++++++++++++++++++
@@ -1034,6 +1038,8 @@ capture are applied to all bands.
 This should not be used on "Level 2" or analysis-ready datacube products.
 
 "apply_solar_corrections" requires manual_merge to also be set.
+
+.. _layers-flag-processing:
 
 -------------------------------
 Flag Processing Section (flags)
@@ -1195,7 +1201,7 @@ Identifiers Section (identifiers)
 ---------------------------------
 
 The identifiers section is optional.  It is a dictionary mapping names from the
-`WMS authorities section <https://datacube-ows.readthedocs.io/en/latest/cfg_wms.html#identifier-authorities-authorities>`_
+:ref:`WMS authorities section <wms-identifier-authorities>`
 to an identifier for this layer, issued by each of those authorities.
 
 E.g.
@@ -1266,6 +1272,8 @@ days.
 This configuration option is provided to allow compatibility with other systems that
 do not use solar days and is not recommended for normal use.
 
+.. _layers-custom-includes:
+
 Custom Layer Includes (custom_includes)
 +++++++++++++++++++++++++++++++++++++++
 
@@ -1331,12 +1339,14 @@ The :doc:`"styling" section <cfg_styling>` describes the WMS and WMTS styles for
 the layer.
 
 
+.. _layers-inheritance:
+
 -----------
 Inheritance
 -----------
 
 Named layers may be
-`inherited <https://datacube-ows.readthedocs.io/en/latest/configuration.html#configuration-inheritance>`_
+:ref:`inherited <configuration-inheritance>`
 from previously defined layers.
 
 To lookup a layer by name use the "layer" element in the inherits section:

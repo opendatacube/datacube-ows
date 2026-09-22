@@ -61,6 +61,8 @@ E.g.
         "s3_bucket": "s3_bucket_name",
         "s3_aws_zone": "ap-southeast-2",
 
+.. _wms-identifier-authorities:
+
 Identifier Authorities (authorities)
 ====================================
 
@@ -84,6 +86,8 @@ E.g.
             "auth": "https://authoritative-authority.com",
             "idsrus": "https://www.identifiers-r-us.com",
         },
+
+.. _wms-caps-cache-maxage:
 
 GetCapabilities Cache Control Headers (caps_cache_maxage)
 =========================================================

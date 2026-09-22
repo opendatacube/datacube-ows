@@ -64,8 +64,8 @@ for some layers/styles by passing optional arguments
 to the function.
 
 This technique is particularly useful for
-`style index functions <https://datacube-ows.readthedocs.io/en/latest/cfg_colourramp_styles.html#index-function>`__
-and `component callback functions <https://datacube-ows.readthedocs.io/en/latest/cfg_component_styles.html#callback-function-components>`_,
+:ref:`style index functions <colourramp-index-function>`
+and :ref:`component callback functions <component-callback-function>`,
 but will work for any function in the configuration format.
 
 args and kwargs
@@ -87,11 +87,11 @@ mapped_bands
 
 A common use case is passing band names to generic band-math
 functions for
-`component callback functions <https://datacube-ows.readthedocs.io/en/latest/cfg_component_styles.html#callback-function-components>`_
+:ref:`component callback functions <component-callback-function>`
 and
-`style index functions <https://datacube-ows.readthedocs.io/en/latest/cfg_colourramp_styles.html#index-function>`__.
+:ref:`style index functions <colourramp-index-function>`.
 In order for this to work with
-`band aliases <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#bands-dictionary-bands>`_,
+:ref:`band aliases <layers-bands-dictionary>`,
 it it necessary for the function
 to have access to the band alias dictionary to convert aliases
 to native band names.  This can be accomplished with the
@@ -101,6 +101,8 @@ to the function as an additional keyword argument "band_mapper".
 
 Refer to the source code for the band_utils functions discussed below
 for examples.
+
+.. _functions-band-utils:
 
 band_utils functions
 ++++++++++++++++++++

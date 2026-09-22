@@ -5,6 +5,8 @@ OWS Styling HOW-TO Guide: Components
 .. contents:: Table of Contents
 
 
+.. _howto-simple-linear-components:
+
 Simple Linear Components
 ------------------------
 
