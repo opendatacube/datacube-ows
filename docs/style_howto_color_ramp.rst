@@ -42,11 +42,11 @@ The full list of matplotlib named colour ramps can be found in the
 (Note that you can reverse the order of any ramp by adding the suffix ``_r``. E.g. "RdYlGn_r" is the
 same as "RdYlGn" except green is the low end of the scale and red the high end.)
 
-.. image:: https://user-images.githubusercontent.com/4548530/112426051-591d6000-8d8b-11eb-9673-c3efd4463353.png
+.. image:: images/colour-ramp-ndvi-bidirectional.webp
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112426051-591d6000-8d8b-11eb-9673-c3efd4463353.png>`__
+<images/colour-ramp-ndvi-bidirectional.webp>`__
 
 The green (positive) bits looks pretty good, but the zero/negative (yellow/red) bits aren't that interesting.
 
@@ -77,11 +77,11 @@ arithmetic operators like `+ - / *` and parentheses for precedence.
         "range": [0.0, 1.0]
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/112567708-6e4ec900-8e35-11eb-8c75-a6a1f35ef665.png
+.. image:: images/colour-ramp-ndvi-unidirectional.webp
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112567708-6e4ec900-8e35-11eb-8c75-a6a1f35ef665.png>`__
+<images/colour-ramp-ndvi-unidirectional.webp>`__
 
 That's a more informative visualisation of NDVI, but the choice of colour ramp doesn't look particularly
 appropriate, in my opinion.
@@ -163,11 +163,11 @@ at the results.
         ]
 
 
-.. image:: https://user-images.githubusercontent.com/4548530/113971225-b6c9a600-987b-11eb-9ba8-c046728aedee.png
+.. image:: images/colour-ramp-ndvi-custom.webp
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/113971225-b6c9a600-987b-11eb-9ba8-c046728aedee.png>`__
+<images/colour-ramp-ndvi-custom.webp>`__
 
 Oh well, looks like there's nothing much interesting in that close-to-zero region.  In fact, it would be
 nice if we could get rid of those bits all together, just leave those bits transparent, to show the next
@@ -233,11 +233,11 @@ where 0.0 is totally transparent and 1.0 (the default) is opaque.  Note that you
         ]
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/112597171-e1ba0000-8e60-11eb-8dbc-7b983cb71af3.png
+.. image:: images/colour-ramp-ndvi-custom-alpha.webp
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112597171-e1ba0000-8e60-11eb-8dbc-7b983cb71af3.png>`__
+<images/colour-ramp-ndvi-custom-alpha.webp>`__
 
 (The image is displayed here against a white background.  When displayed on a webmap, those white pixels would
 show the next layer down on the map.  The full size view shows the image against a grey background on most

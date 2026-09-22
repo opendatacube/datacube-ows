@@ -79,11 +79,11 @@ is responsible for scaling of the green channel.
 Note that this example is for illustrative purposes only - there is a much easier way to implement
 scaling, discussed later in this chapter.
 
-.. image:: https://user-images.githubusercontent.com/4548530/112403696-00d26800-8d63-11eb-9d16-405b7b972e08.png
+.. image:: images/nonlinear-red-ndvi-blue-full-scale.webp
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112403696-00d26800-8d63-11eb-9d16-405b7b972e08.png>`__
+<images/nonlinear-red-ndvi-blue-full-scale.webp>`__
 
 Meh, it's *very* green, and kind of saturated.  This is because we are
 scaling (-1, +1) to (0, 255) and negative values of NDVI
@@ -134,11 +134,11 @@ The ``@scalable`` decorator adds ``scale_from`` and ``scale_to`` arguments to th
 and applies the relevant scaling to the output. Values outside the "scale_from" range are
 clipped to the minimum or maximum "scale_to" value.
 
-.. image:: https://user-images.githubusercontent.com/4548530/112408715-67a84f00-8d6c-11eb-82de-8c19b086cde2.png
+.. image:: images/nonlinear-red-ndvi-blue-half-scale.webp
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112408715-67a84f00-8d6c-11eb-82de-8c19b086cde2.png>`__
+<images/nonlinear-red-ndvi-blue-half-scale.webp>`__
 
 Non-Linear Components: OWS Function Syntax and Scalable
 -------------------------------------------------------
@@ -185,11 +185,11 @@ Here's an extended example that replaces Green with NDVI and Blue with NDWI:
 
 Note that utility functions are referenced by name, rather than importing the name and inserting directly.
 
-.. image:: https://user-images.githubusercontent.com/4548530/112410722-c6bb9300-8d6f-11eb-944f-ce283e922075.png
+.. image:: images/nonlinear-red-ndvi-ndwi-half-scale.webp
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112410722-c6bb9300-8d6f-11eb-944f-ce283e922075.png>`__
+<images/nonlinear-red-ndvi-ndwi-half-scale.webp>`__
 
 :doc:`Next up <style_howto_color_ramp>`
 we will look at colour ramp styles.
