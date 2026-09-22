@@ -1395,8 +1395,8 @@ Restrictions on inheritance
 +++++++++++++++++++++++++++
 
 1. Note that a layer can only inherit by name from a parent layer that has already been parsed
-   by the config parser - 
-   
+   by the config parser -
+
    i.e. it must appear earlier in the layer hierarchy.  This restriction
    can be avoided using direct inheritance.
 

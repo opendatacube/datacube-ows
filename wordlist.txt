@@ -472,6 +472,7 @@ WCSRequest
 webmap
 webmercator
 WebMercator
+webp
 webserver
 werkzeug
 wgs

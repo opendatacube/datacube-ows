@@ -159,8 +159,8 @@ and space views into a single space-time view) is done
 CONCURRENTLY. This means that it may not take effect until
 some minutes after ``datacube-ows-update`` exits.
 
-.. warning:: DO NOT ATTEMPT TO REFRESH VIEWS NON-CONCURRENTLY IN A PRODUCTION ENVIRONMENT. 
-    
+.. warning:: DO NOT ATTEMPT TO REFRESH VIEWS NON-CONCURRENTLY IN A PRODUCTION ENVIRONMENT.
+
    This will leave OWS broken and unable to respond to requests until the refresh is complete.
 
 In a production environment you should not be refreshing views

@@ -88,10 +88,10 @@ Dataset from the ODC ``load_data`` method, then you need only ensure that all ba
 The output will be a new ``xarray.Dataset`` object with the same ``dims`` and ``coords`` as the input
 data (except without the ``time`` dimension), and four uint8 data_vars: red, green, blue and alpha.
 
-You may also optionally provide a valid-data mask: a boolean ``xarray.DataArray`` with the same ``dims`` and coords`` as the input
+You may also optionally provide a valid-data mask: a boolean :class:`xarray.DataArray` with the same ``dims`` and ``coords`` as the input
 data.  Pixels that are False in the mask will normally have zero alpha channel in the output.
 
-There are two API functions that provide this functionality: ``apply_ows_style``, ``apply_ows_style_cfg``:
+There are two API functions that provide this functionality: :py:function:`~datacube_ows.styles.api.apply_ows_style`, :py:function:`~datacube_ows.styles.api.apply_ows_style_cfg`:
 
 ::
 

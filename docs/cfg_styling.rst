@@ -348,7 +348,7 @@ dates within a particular style might return a representation
 of the difference between the data for those two dates.
 
 Multi-date behaviour is configured using the ``multi_date``
-entry which is a list of multi-date handlers.  `multi_date``
+entry which is a list of multi-date handlers.  ``multi_date``
 is optional and defaults to an empty list (no multi-date
 handlers, single date requests supported only).
 

@@ -235,7 +235,7 @@ Multi-date value_map
 
 A value_map in a multi-date handler has the same general structure as the
 single date :ref:`value_map <value-map>` described above.  The handler must serve a single
-number of date values.  The discussion here will assume an `allowed_count_range``
+number of date values.  The discussion here will assume an ``allowed_count_range``
 of ``[2, 2]``, but higher values should work.
 
 The ``flags`` or ``values`` (and invert) entry for each rule is replaced by a list of
