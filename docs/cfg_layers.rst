@@ -1017,6 +1017,8 @@ for calling conventions.
 
 Optional - default is to not use a fuse function.
 
+.. _manual-merge-manual-merge:
+
 Manual Merge (manual_merge)
 +++++++++++++++++++++++++++
 
