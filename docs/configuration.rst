@@ -271,7 +271,7 @@ been parsed by the config parser - i.e. it must appear earlier in the definition
 This restriction can be avoided using direct inheritance.
 
 Behaviour of Lists
-++++++++++++++++++
+==================
 
 Care should be taken of the special handling of lists in configuration:
 
@@ -369,7 +369,7 @@ content management systems, all human-readable metadata in the OWS configuration
 into a separate file and managed independently.
 
 Metadata Separation
-+++++++++++++++++++
+===================
 
 To separate your metadata from config (either as an end in itself, or as preparation for internationalisation/translation):
 
@@ -422,7 +422,7 @@ Fields that can be included in the message file are:
    then the resulting combined value "less than 0.0" WILL be picked up the translation engine.
 
 Internationalisation/Translation of Metadata
-++++++++++++++++++++++++++++++++++++++++++++
+============================================
 
 Once you have extracted your metadata into a single file, separate from the main body of configuration,
 as described `above <#metadata-separation>`_, generate a translation catalog for every language you want

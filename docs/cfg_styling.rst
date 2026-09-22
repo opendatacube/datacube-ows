@@ -395,7 +395,7 @@ Specific style types may support other forms of multi-date handlers. In particul
 have additional specialised multi-date handler behaviour.
 
 Time Series Animation
-%%%%%%%%%%%%%%%%%%%%%
+@@@@@@@@@@@@@@@@@@@@@
 
 Time series animation is supported as a multi-date handler for all style subtypes. To enable, simply create
 a multi-date handler with the "animate" flag set to True.  E.g.:
@@ -416,7 +416,7 @@ frame rate of the animation can be controlled with the optional ``frame_duration
 measured in milliseconds and defaults to 1000 if not supplied.
 
 Feature Info Multi-Date Custom Includes (custom_includes)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 In addition to the custom includes defined :ref:`at the layer level <layers-custom-includes>`, and
 `at the style level, as described above <#feature-info-custom-style-includes-custom-includes>`_,
