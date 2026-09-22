@@ -17,6 +17,8 @@ activated (specified in the :ref:`global services <services>`
 section).
 
 
+.. _supported-output-formats-formats:
+
 Supported output formats (formats)
 ==================================
 
@@ -80,7 +82,7 @@ This entry must be supplied if the WCS service is
 activated (specified in the :ref:`global services <services>`
 section) and must contain the name of one of the formats in
 defined in the
-`formats <#supported-output-formats-formats>`_ section.
+:ref:`formats <supported-output-formats-formats>` section.
 
 GEOTiff Statistics (calculate_tiff_statistics)
 ==============================================

@@ -38,8 +38,7 @@ note that there are some important differences:
 3. JSON does not allow commas after the last element of lists and objects (dictionaries in Python terms).
 4. JSON does not support comments of any kind.
 
-`This general introductory stuff is boring.  Take me straight to the description of the
-configuration file. <#general-config-structure>`_
+:ref:`This general introductory stuff is boring. Take me straight to the description of the configuration file. <general-config-structure>`
 
 .. _location:
 
@@ -368,6 +367,8 @@ use-cases like multi-language internationalisation and integrating metadata with
 content management systems, all human-readable metadata in the OWS configuration can be extracted
 into a separate file and managed independently.
 
+.. _metadata-separation:
+
 Metadata Separation
 ===================
 
@@ -425,7 +426,7 @@ Internationalisation/Translation of Metadata
 ============================================
 
 Once you have extracted your metadata into a single file, separate from the main body of configuration,
-as described `above <#metadata-separation>`_, generate a translation catalog for every language you want
+as described :ref:`above <metadata-separation>`, generate a translation catalog for every language you want
 translations for - including the "native" language that your messages file is already in:
 
 ::
@@ -469,6 +470,8 @@ You can now update the
 :ref:`global section of your OWS Configuration <cfg-global-metadata-separation>`
 section and restart the web service and
 you are serving multi-lingually!  (Adjust your client's "Accept-Language" header to test.)
+
+.. _general-config-structure:
 
 General Config Structure
 ------------------------

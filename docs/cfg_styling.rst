@@ -52,6 +52,8 @@ style "a_style" would be the default.
 Style Definitions
 -----------------
 
+.. _style-types:
+
 Style Types
 ===========
 
@@ -240,6 +242,8 @@ E.g.
     ],
 
 
+.. _feature-info-custom-style-includes-custom-includes:
+
 Feature Info Custom Style Includes (custom_includes)
 ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -349,7 +353,7 @@ is optional and defaults to an empty list (no multi-date
 handlers, single date requests supported only).
 
 The format of a multi-date handler varies depending on the
-`style type <#style-types>`__ but a multi-date handler must
+:ref:`style type <style-types>` but a multi-date handler must
 always contain a ``allowed_count_range`` entry which specifies
 the values for which the handler applies. The ``allowed_count_range``
 is a tuple of two integers corresponding the minimum and maximum
@@ -419,7 +423,7 @@ Feature Info Multi-Date Custom Includes (custom_includes)
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 In addition to the custom includes defined :ref:`at the layer level <layers-custom-includes>`, and
-`at the style level, as described above <#feature-info-custom-style-includes-custom-includes>`_,
+:ref:`at the style level, as described above <feature-info-custom-style-includes-custom-includes>`,
 If the GetFeatureInfo requests a style AND multiple dates, then the multi-date handler
 can define additional custom feature info.
 

@@ -28,10 +28,10 @@ The "layers" section is a list of Layer configurations.
 
 A layer may be either:
 
-* A `named layer <#named-layers>`_ which represents a queryable
+* A :ref:`named layer <named-layers>` which represents a queryable
   WMS layer and a corresponding WCS coverage
 
-* A `folder layer <#folder-layers>`_ which represents
+* A :ref:`folder layer <folder-layers>` which represents
   a folder in WMS, allowing layers to be organised in a
   hierarchical way. Folder layers are not themselves queryable but
   themselves contain a list of further child layers, which in
@@ -43,11 +43,13 @@ hierarchy of coverages, and so simply uses a flattened
 list of all declared named layers for it's list of
 coverages.
 
+.. _common-elements:
+
 Common Elements
 ===============
 
 The following configuration entries and sections apply to both
-`named layer <#named-layers>`_ and `folder layer <#folder-layers>`_.
+:ref:`named layer <named-layers>` and :ref:`folder layer <folder-layers>`.
 
 ------------------
 Title and Abstract
@@ -59,7 +61,7 @@ and is required for all layers.
 The "abstract" entry provides a longer human-readable description
 of the layer.  "Abstract" is required for top-level layers -
 layers directly included in the "layers" section. Layers that are
-included via a `folder layer <#folder-layers>`_ can omit the abstract,
+included via a :ref:`folder layer <folder-layers>` can omit the abstract,
 in which case the abstract of the parent layer is used.
 
 E.g.
@@ -110,10 +112,12 @@ reported.
 The structure of the attribution section is the same as described in
 :ref:`the wms section <default-attribution-attribution>`.
 
+.. _folder-layers:
+
 Folder Layers
 =============
 
-In addition to the `common elements <#common-elements>`_ described
+In addition to the :ref:`common elements <common-elements>` described
 above, folder layers have a "layers" element which is a list of child
 layers (which may be named layers, folder layers with their own
 child layers).
@@ -149,13 +153,15 @@ E.g.
         }
     ]
 
+.. _named-layers:
+
 Named Layers
 ============
 
 A named layer describes a queryable layer (WMS/WMTS) and the corresponding
 coverage (WCS).
 
-In addition to the `common elements <#common-elements>`_ described
+In addition to the :ref:`common elements <common-elements>` described
 above, named layers have the following configuration elements:
 
 ----
@@ -185,10 +191,10 @@ Product Layers and Multiproduct Layers
 --------------------------------------
 
 Named layers can map to either a single Open Data Cube product
-(a `Product Layer <#product-layer-configuration-product-name>`_), or
+(a :ref:`Product Layer <product-layer-configuration-product-name>`), or
 to several Open Data Cube products with identical band and
 metadata structure (e.g. matching Sentinel-2A and Sentinel-2B
-products) (a `Multiproduct Layer <#multiproduct-configuration-multi-product-product-names>`_).
+products) (a :ref:`Multiproduct Layer <multiproduct-layer-configuration-multi-product-product-names>`).
 
 It also possible to combine bands with differing
 bands, but only bands common to both products can be accessed.
@@ -201,6 +207,8 @@ as long as the following rules are obeyed for all supported bands:
 
 1) Each band must have at least one ODC alias in common across all included products
 2) Each band must have the same datatype (``numpy.dtype``) and nodata value across all included products.
+
+.. _product-layer-configuration-product-name:
 
 ------------------------------------------
 Product Layer Configuration (product_name)
@@ -221,6 +229,8 @@ E.g.
         "product_name": "ls8_ard",
         ...
     }
+
+.. _multiproduct-layer-configuration-multi-product-product-names:
 
 ---------------------------------------------------------------
 Multiproduct Layer Configuration (multi_product, product_names)
@@ -270,6 +280,8 @@ preference to Landsat where both are available:
         ...
     }
 
+.. _low-resolution-summary-products-low-res-product-name-s:
+
 ---------------------------------------------------------
 Low-Resolution Summary Products - low_res_product_name(s)
 ---------------------------------------------------------
@@ -301,7 +313,7 @@ or for multi-product layers:
     "low_res_product_names": ["summary_product_1", "summary_product_2"]
 
 The conditions under which to switch to the low-resolution product(s)
-are defined in the `resource_limits <#resource-limits-resource-limits>`_
+are defined in the :ref:`resource_limits <resource-limits-resource-limits>`
 section, discussed below.
 
 -------------------------
@@ -602,6 +614,8 @@ E.g.
         "native_crs": "EPSG:3577",
         "native_resolution": [25.0, 25.0],
 
+.. _resource-limits-resource-limits:
+
 ---------------------------------
 Resource Limits (resource_limits)
 ---------------------------------
@@ -620,8 +634,8 @@ from consuming excessive resources.
 
 These mechanisms are configured in the "resource_limits" section,
 which is a dictionary with two independent sub-sections
-`wms <#resource-limits-wms>`_ (for WMS and WMTS) and
-`wcs <#resource-limits-wcs>`_ (for WCS), described in
+:ref:`wms <resource-limits-wms>` (for WMS and WMTS) and
+:ref:`wcs <resource-limits-wcs>` (for WCS), described in
 detail below.
 
 E.g.
@@ -661,12 +675,14 @@ E.g.
         }
     }
 
+.. _resource-limits-wms:
+
 Resource Limits (wms)
 +++++++++++++++++++++
 
 When a WMS GetMap (WMTS GetTile) request exceeds a configured resource
 limit setting, one of the following will occur depending on the value
-of the `low-resolution summary product(s) <#low-resolution-summary-products-low-res-product-name-s>`_
+of the :ref:`low-resolution summary product(s) <low-resolution-summary-products-low-res-product-name-s>`
 setting.
 
 If a low-resolution summary product has been defined, then requests that exceed
@@ -693,7 +709,7 @@ the list.  The entry is optional and defaults to (150, 180, 200, 160) -
 a semi-transparent light blue.
 
 Note that this entry has no effect if
-`low-resolution summary product(s) <#low-resolution-summary-products-low-res-product-name-s>`_
+:ref:`low-resolution summary product(s) <low-resolution-summary-products-low-res-product-name-s>`
 have been declared for the product.
 
 ++++++++++++++
@@ -774,6 +790,8 @@ transformation from the source data to the output image.)
 
 Values around 250.0-800.0 are usually appropriate.  ``min_zoom_factor`` is optional and
 defaults to None, which means the limit is not applied.
+
+.. _dataset-cache-rules:
 
 +++++++++++++++++++
 dataset_cache_rules
@@ -859,6 +877,8 @@ Cache-control header is returned according to the number of datasets hit:
 * 8-12 datasets: max-age: 604800
 * 13+ datasets:  no-cache   (high resource fallback - polygons or low-res summary product)
 
+.. _resource-limits-wcs:
+
 Resource Limits (wcs)
 +++++++++++++++++++++
 
@@ -870,7 +890,7 @@ do not.
 When a WCS GetCoverage request exceeds a configured resource
 limit setting, either an error is returned to the user, or the
 request is satisfied from the
-`low-resolution summary product(s) <#low-resolution-summary-products-low-res-product-name-s>`_
+:ref:`low-resolution summary product(s) <low-resolution-summary-products-low-res-product-name-s>`
 depending on which limit(s) have been exceeded, and whether a low-resolution
 summary product has been defined. See the documentation for each limit below for details.
 
@@ -880,7 +900,7 @@ summary product has been defined. See the documentation for each limit below for
 Cache Control (dataset-cache-rules and describe_cache_maxage)
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-The `dataset_cache_rules <#dataset-cache-rules>`_ element is also
+The :ref:`dataset_cache_rules <dataset-cache-rules>` element is also
 supported for WCS.  It behaves for WCS GetCoverage requests as
 documented above for WMS GetMap and WMTS GetTile requests.
 
@@ -921,6 +941,8 @@ corresponds to an image size of:
 
 If the image requested exceeds the ``max_image_size``, an error is always returned.
 
+
+.. _image-processing-section-image-processing:
 
 -------------------------------------------
 Image Processing Section (image_processing)
@@ -999,6 +1021,8 @@ E.g.
     "extent_mask_func": "datacube_ows.ogc_utils.mask_by_quality",
     "always_fetch_bands": ["quality"],
 
+.. _fuse-function-fuse-func:
+
 Fuse Function (fuse_func)
 +++++++++++++++++++++++++
 
@@ -1058,7 +1082,7 @@ related product, a completely independent product, or from any combination
 of these.
 
 Some entries have corresponding entries in
-the `image processing section <#image-processing-section-image-processing>`_
+the :ref:`image processing section <image-processing-section-image-processing>`
 described above.  Items in this section only affect WMS/WMTS.
 
 The flags section generally consists of a list of flag-band definitions.
@@ -1098,7 +1122,7 @@ Pixel-quality bitmask bands or enumeration flag bands can be used, although
 bitmask bands are better supported and are recommended where possible.
 
 If the flag product(s) is/are the same as the main data product(s), then
-an alias from the `bands dictionary <#bands-dictionary-bands>`_ may be used.
+an alias from the :ref:`bands dictionary <layers-bands-dictionary>` may be used.
 
 Note that it is not possible to combine flag bands from separate products
 if they have the same band name (unless one of the products is the main product
@@ -1115,7 +1139,7 @@ can be over-ridden with the "product" (for Product Layers) or "products"
 
 For Product Layers, specify a single ODC product name, for Multiproduct Layers,
 specify a list of ODC product names, which should map one-to-one to the main
-`product_names <#multiproduct-layer-configuration-multi-product-product-names>`_ list.
+:ref:`product_names <multiproduct-layer-configuration-multi-product-product-names>` list.
 
 E.g. Product Layer, flag band is in the main layer product:
 
@@ -1170,8 +1194,7 @@ Flag Fuse Function (fuse_func)
 ++++++++++++++++++++++++++++++
 
 Only applies if the flag band is read from a separate product
-(or product).  Equivalent to the `fuse function in the
-image_processing section <#fuse-function-fuse-func>`_.
+(or product).  Equivalent to the :ref:`fuse function in the image_processing section <fuse-function-fuse-func>`.
 
 If the global "load_driver" is set to "rio", ``fuse_func`` must be a string
 representing an importable, fully-qualified python function name (or None).
@@ -1185,8 +1208,7 @@ Manual Flag Merge (manual_merge)
 ++++++++++++++++++++++++++++++++
 
 Only applies if the flag band is read from a separate product
-(or product).  Equivalent to the `manual merge in the
-image_processing section <#manual-merge-manual-merge>`_.
+(or product).  Equivalent to the :ref:`manual merge in the image_processing section <manual-merge-manual-merge>`.
 Optional - defaults to False.
 
 Ignore Time (ignore_time)

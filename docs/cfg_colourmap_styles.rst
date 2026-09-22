@@ -17,7 +17,7 @@ Colour-map styles support the
 Colour-map styles also have :ref:`value_map <value-map>` entry that describes
 how the colour of individual pixels is determined.
 
-Colour-map styles support `automatic legend generation <#legend>`_.
+Colour-map styles support :ref:`automatic legend generation <legend>`.
 
 .. _value-map:
 
@@ -25,12 +25,12 @@ Colour-map styles support `automatic legend generation <#legend>`_.
 value_map
 ---------
 
-The ``value_map`` is dictionary mapping bands to a list of `value rules <#value-rule-format>`_.
+The ``value_map`` is dictionary mapping bands to a list of :ref:`value rules <value-rule-format>`.
 The key is a name or alias of a bitmap band.  Multiple bands are possible
 but it is strongly recommended to use only a single band, because the order in which
 rules are processed cannot be guaranteed in a multiple band scenario.
 
-A value rule set is a list of `value rules <#value-rule-format>`_.  The rules are applied in order.  Each pixel
+A value rule set is a list of :ref:`value rules <value-rule-format>`.  The rules are applied in order.  Each pixel
 will take the the colour specified by the first value rule in the set that the pixel satisifies.  Any pixel
 that does not match any rules will be fully transparent.
 
@@ -57,6 +57,8 @@ E.g.::
         #   band2_rule2,
         # ],
     },
+
+.. _value-rule-format:
 
 Value Rule Format
 =================
@@ -94,6 +96,8 @@ E.g.::
     "color": "#999999",
     "mask": True
 
+.. _title-and-abstract:
+
 Title and Abstract
 ++++++++++++++++++
 
@@ -122,6 +126,8 @@ Each Value Rule must also specify the rule to evaluate when it applies.
 For details, refer to the
 :doc:`OWS Masking Syntax <cfg_masks>`.
 
+.. _legend:
+
 ------
 Legend
 ------
@@ -134,7 +140,7 @@ Automatic legend generation can be deactivated using the
 (``show_legend`` is ``True`` by default for colour-map styles.)
 
 A patch and label is added to the legend for each value rule in the
-configuration.  See `title and abstract <#title-and-abstract>`_ for
+configuration.  See :ref:`title and abstract <title-and-abstract>` for
 customising the label of each rule.
 
 Legend Title

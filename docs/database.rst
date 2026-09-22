@@ -6,9 +6,9 @@ OWS Database Documentation
 Datacube OWS uses three groups of database
 entities:
 
-1. `ODC native entities <#open-data-cube-native-entities>`_
-2. `OWS materialised views over ODC indexes <#materialised-views-over-odc-indexes>`_
-3. `OWS range tables <#range-tables-layer-extent-cache>`_.
+1. :ref:`ODC native entities <open-data-cube-native-entities>`
+2. :ref:`OWS materialised views over ODC indexes <materialised-views-over-odc-indexes-postgres-driver-only>`
+3. :ref:`OWS range tables <ranges-table-layer-extent-cache>`.
 
 System Architecture Diagram
 ---------------------------
@@ -17,6 +17,8 @@ System Architecture Diagram
     :target: /_images/ows_diagram1.9.png
 
     OWS Architecture Diagram, including Database structure.
+
+.. _open-data-cube-native-entities:
 
 Open Data Cube Native Entities
 ------------------------------
@@ -29,6 +31,8 @@ See
 
 This schema is created and maintained with the ``datacube`` command.
 OWS only needs read access to this schema.
+
+.. _materialised-views-over-odc-indexes-postgres-driver-only:
 
 Materialised Views over ODC Indexes (Postgres driver only)
 ----------------------------------------------------------
@@ -47,6 +51,8 @@ is added to the underlying ODC index, as described below.
 With the new postgis index driver, the functionality provided by the
 materialised views is available directly from the ODC index, and so
 no materialised views are  required.
+
+.. _ranges-table-layer-extent-cache:
 
 Ranges Table (Layer Extent Cache)
 ---------------------------------

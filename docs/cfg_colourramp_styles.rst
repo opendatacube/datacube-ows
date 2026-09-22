@@ -17,7 +17,7 @@ Colour-ramp styles support the
 :ref:`elements common to all styles <styling-common-elements>`.
 
 Colour-ramp styles support automatic legend generation. Specialised
-legend configuration is described `below <#legend-configuration>`__.
+legend configuration is described :ref:`below <legend-configuration>`.
 
 .. note:: On spelling
 
@@ -58,10 +58,10 @@ Functions (complex calculations)
 =================================
 
 For more complex calculations than are supported by the expression
-syntax, The `index_function <#index-function>`__ entry can define how the
+syntax, The :ref:`index_function <colourramp-index-function>` entry can define how the
 index is calculated at each pixel using an arbitrary Python function.
 The bands needed for the calculation must be declared in
-the `needed_bands list <#needed-bands-list>`__
+the :ref:`needed_bands list <needed-bands-list>`
 entry.
 
 .. _colourramp-index-function:
@@ -73,7 +73,7 @@ The ``index_function`` allows the user to declare a callback function
 to calculate the index value using OWS's
 :doc:`function configuration format <cfg_functions>`.
 The function is expected to take an xarray Dataset containing all the
-bands in the `needed_bands list <#needed-bands-list>`__ (plus any additional
+bands in the :ref:`needed_bands list <needed-bands-list>` (plus any additional
 arguments handled by the
 :doc:`function configuration format <cfg_functions>`); and returns
 an xarray Dataset containing the index value.
@@ -82,12 +82,14 @@ A :ref:`small library <functions-band-utils>`
 of general purpose band math functions
 are provided in ``datacube_ows.band_utils``.
 
+.. _needed-bands-list:
+
 needed_bands list
 +++++++++++++++++
 
 The ``needed_bands`` entry must list the names (or aliases) of
 all the bands required by the
-`index_function <#index-function>`__.
+:ref:`index_function <colourramp-index-function>`.
 
 E.g.::
 
@@ -102,6 +104,8 @@ E.g.::
    },
    "needed_bands": [ "red", "nir" ]
 
+.. _colour-ramps:
+
 ------------
 Colour Ramps
 ------------
@@ -112,18 +116,20 @@ There are three ways to define the colour map:
    running from dark purple through blue, green, yellow,
    orange to dark red.)
 
-   To use the default colour ramp, just use the `range <#ramp-scale-range>`__
+   To use the default colour ramp, just use the :ref:`range <ramp-scale-range>`
    style config entry.
 
 2. Use a pre-defined MatPlotLib colour ramp.
 
-   To use a MatPlotLib colour ramp, use the `mpl_ramp <#mpl-ramp>`__
-   and `range <#ramp-scale-range>`__ style config entries.
+   To use a MatPlotLib colour ramp, use the :ref:`mpl_ramp <mpl-ramp>`
+   and :ref:`range <ramp-scale-range>` style config entries.
 
 3. Define your own colour ramp.
 
-    To define a custom colour ramp, use the `color_ramp <#manual-color-ramp>`__
+    To define a custom colour ramp, use the :ref:`color_ramp <manual-color-ramp>`
     style config entry.
+
+.. _ramp-scale-range:
 
 Ramp Scale (Range)
 ==================
@@ -140,6 +146,8 @@ E.g.::
 
     "range": [-1.0, 1.0]
 
+.. _mpl-ramp:
+
 mpl_ramp
 ========
 
@@ -148,18 +156,20 @@ You can use any named matplotlib colour ramp, see
 for a list of supported ramps.
 
 Matplotlib colour ramps run from 0.0 to 1.0 to scale them
-to the output of your index function, define a `range <#ramp-scale-range>`__.
+to the output of your index function, define a :ref:`range <ramp-scale-range>`.
 
 E.g.::
 
     "mpl_ramp": "RdBu",
     "range": [0.0, 1200.0]
 
+.. _manual-color-ramp:
+
 Manual color_ramp
 =================
 
 A colour ramp can be created manually using the ``color_ramp`` style configuration
-entry.  ``color_ramp`` should be a list of `colour point definitions <#colour-point-definition>`_.
+entry.  ``color_ramp`` should be a list of :ref:`colour point definitions <colour-point-definition>`.
 Each colour point definition describes a mapping from a value to a colour.
 
 The list should be sorted in order of ascending value. If the index function value
@@ -173,6 +183,8 @@ Pixels with index function value in between two colour point values will have
 be coloured a average of the rgb values of those two colour points, weighted
 by the difference between the pixel index function value and the values of the
 two colour points.
+
+.. _colour-point-definition:
 
 Colour Point Definition
 +++++++++++++++++++++++
@@ -215,6 +227,8 @@ E.g.::
         }
      ],
 
+.. _legend-configuration:
+
 --------------------
 Legend Configuration
 --------------------
@@ -251,10 +265,10 @@ Legend Range
 ============
 
 The legend range defaults to the
-`range <#ramp-scale-range>`_  for the default colour ramp
-or `MatPlotLib color ramps <#mpl_ramp>`_.
+:ref:`range <ramp-scale-range>`  for the default colour ramp
+or :ref:`MatPlotLib color ramps <mpl-ramp>`.
 
-For `manual colour ramps <#manual-color-ramp>`_, the default
+For :ref:`manual colour ramps <manual-color-ramp>`, the default
 range is between the values of first and last colour point
 definitions in the ramp, **excluding** any leading or trailing
 colour points that are full transparent (alpha=0.0).
@@ -566,13 +580,15 @@ multi-date handlers.  It is a function defined using OWS's
 The first argument passed to the function depends on the value of the ``pass_raw_data``
 element, as described above. The function should return an xarray DataArray with no time
 dimension, containing the data used as an input to the
-`multi-date handler's colour ramp <#multi-date-colour-ramps>`__.
+:ref:`multi-date handler's colour ramp <multi-date-colour-ramps>`.
+
+.. _multi-date-colour-ramps:
 
 Multi-Date Colour Ramps
 =======================
 
 Each multi-date handler has it's own colour ramp.  It may be defined by
-any of the `colour ramp definition methods <#colour-ramps>`__ described
+any of the :ref:`colour ramp definition methods <colour-ramps>` described
 above.
 
 Multi-Date Legend
@@ -581,7 +597,7 @@ Multi-Date Legend
 A legend can be automatically generated for a multi-date
 handler. The ``legend`` section of a colour ramp style
 multi-date handler behaves the same as the single-date
-`legend section <#legend-configuration>`__ described above.
+:ref:`legend section <legend-configuration>` described above.
 
 feature_info_label
 ==================

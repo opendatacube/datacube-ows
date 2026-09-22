@@ -15,12 +15,14 @@ Component styles support the
 :ref:`elements common to all styles <styling-common-elements>`.
 
 There are three additional settings specific to component styles:
-`scale_range <#style-scale-range>`, `components <#components>`
-and `additional_bands <#additional-bands-additional-bands>`_.
+:ref:`scale_range <style-scale-range>`, :ref:`components <components>`
+and :ref:`additional_bands <additional-bands-additional-bands>`.
 
 Component styles do NOT support automatic legend generation. If you
 want a legend you must provide an external
 :ref:`url <styling-url>` to a pre-prepared image.
+
+.. _components:
 
 ----------
 components
@@ -45,24 +47,26 @@ Calculating the value for each pixel has two steps:
 1. Calculate an unscaled channel value.
 
    Each component definition defines either a
-   `linear combination of raw channel data <#linear-combination-components>`_
+   :ref:`linear combination of raw channel data <linear-combination-components>`
    or a
-   `callback function <#callback-function-components>`_
+   :ref:`callback function <component-callback-function>`
    (as discussed in detail below) to determine the unscaled value
    for that channel for each pixel.
 
 2. Scale the unscaled value to unsigned 8-bit value (0-255).
 
-   This is defined by the `scale_range <#component-scale-range>`_
+   This is defined by the :ref:`scale_range <component-scale-range>`
    entry for the channel if it exists, or the style-wide
-   `scale_range <#style-scale-range>`__.
+   :ref:`scale_range <style-scale-range>`.
 
+
+.. _linear-combination-components:
 
 Linear Combination Components
 +++++++++++++++++++++++++++++
 
 In a linear combination component, every entry (apart from
-`scale_range <#component-scale-range>`__) maps a band name or
+:ref:`scale_range <component-scale-range>`) maps a band name or
 alias from the :ref:`band dictionary <layers-bands-dictionary>`
 to a floating point multiplier.  The pixel data values from these bands
 are then multiplied by these multipliers and summed to produce the
@@ -70,9 +74,11 @@ unscaled channel value.
 
 The unscaled channel value is then scaled to the
 to an unsigned 8-bit value (0-255) according to
-the  `scale_range <#component-scale-range>`__
+the  :ref:`scale_range <component-scale-range>`
 entry for the channel if it exists, or the style-wide
-`scale_range <#style-scale-range>`__.
+:ref:`scale_range <style-scale-range>`.
+
+.. _component-scale-range:
 
 Component scale_range
 @@@@@@@@@@@@@@@@@@@@@
@@ -82,7 +88,7 @@ to an 8 bit range for the output image.  Band values outside
 this range are clipped to 0 or 255.
 
 The component scale_range is optional and if not present defaults
-to the `style-side scale_range <#style-scale-range>`_.
+to the :ref:`style-side scale_range <style-scale-range>`.
 
 E.g.::
 
@@ -196,7 +202,7 @@ Band Names That Are Reserved Words
 
 If you are unfortunate enough to have raw data with a band named "scale_range"
 (or "function" which would cause the component to be treated as a
-`callback function component <#callback-function-components>`_), you can
+:ref:`callback function component <component-callback-function>`), you can
 still access it here by defining an alias for the band in the
 :ref:`band dictionary <layers-bands-dictionary>`.
 
@@ -240,7 +246,7 @@ The bands needed for callback function components cannot always be
 determined directly from the component definition, so if any component
 in the style is a callback function component, you should ensure all
 needed bands are retrieved by
-using the `additional_bands <#additional-bands>`__ config item if necessary.
+using the :ref:`additional_bands <additional-bands-additional-bands>` config item if necessary.
 
 E.g.::
 
@@ -277,6 +283,8 @@ E.g.::
         },
         "additional_bands": [ "red", "blue", "nir", "swir1", "swir2" ]
     },
+
+.. _additional-bands-additional-bands:
 
 -----------------------------------
 Additional Bands (additional_bands)
@@ -326,6 +334,8 @@ E.g.::
             "blue"
     ]
 
+.. _style-scale-range:
+
 -----------------
 Style scale_range
 -----------------
@@ -341,5 +351,5 @@ scale_range.
 The style-level scale_range is required unless all component
 channels satisfy the exceptions above.
 
-See the `component scale_range <#component-scale-range>`_
+See the :ref:`component scale_range <component-scale-range>`
 section for examples.

@@ -48,6 +48,8 @@ can re-use the same data for all the examples in this section.
         resolution=(-300,300)
     )
 
+.. _example-infrared-green-false-colour:
+
 Example: Infrared/Green False Colour
 ++++++++++++++++++++++++++++++++++++
 
@@ -282,8 +284,7 @@ Example: Per-channel scale_ranges
 
 What if we want to apply different scale ranges to different channels?
 
-For example, the image in the `false colour example above
-<#example-infrared-green-false-colour>`_, looks a bit
+For example, the image in the :ref:`false colour example above <example-infrared-green-false-colour>`, looks a bit
 saturated, especially in the red and green channels (red+green makes yellow).
 
 .. image:: https://user-images.githubusercontent.com/4548530/112120795-b215b880-8c12-11eb-8bfa-1033961fb1ba.png
