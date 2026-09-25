@@ -22,7 +22,7 @@ Stand-Alone Style Objects
 
 The OWS Styling API introduces the concept of stand-alone style objects, which are constructed from
 a standard OWS configuration
-`style definition <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#style-definitions>`_
+:ref:`style definition <styling-style-definitions>`
 dictionary.
 
 All style definition elements and features that are relevant to rendering an image are supported.
@@ -42,17 +42,17 @@ The differences between stand-alone styles and true OWS styles are:
 
 3. The various OWS-specific band-aliasing techniques are not available.
 
-    It is up to the the user of the API to ensure the band names in the style definition exactly
-    match the data variable names in the XArray Dataset being styled.
+   It is up to the the user of the API to ensure the band names in the style definition exactly
+   match the data variable names in the XArray Dataset being styled.
 
-    Make sure you reference measurement bands from the source product using the same names
-    that you requested in the `dc.load()` statement.
+   Make sure you reference measurement bands from the source product using the same names
+   that you requested in the `dc.load()` statement.
 
 4. Function objects/callables can be used directly in stand-alone style definitions.
 
-    Full OWS Configurations must be serialisable, so functions can only be embedded as
-    fully qualified python names.  For stand-alone styles, raw callable functions can be
-    used.  Some examples are shown below.
+   Full OWS Configurations must be serialisable, so functions can only be embedded as
+   fully qualified python names.  For stand-alone styles, raw callable functions can be
+   used.  Some examples are shown below.
 
 Stand-alone style objects are created by passing a valid style configuration to the
 ``StandaloneStyle`` constructor:
@@ -88,10 +88,10 @@ Dataset from the ODC ``load_data`` method, then you need only ensure that all ba
 The output will be a new ``xarray.Dataset`` object with the same ``dims`` and ``coords`` as the input
 data (except without the ``time`` dimension), and four uint8 data_vars: red, green, blue and alpha.
 
-You may also optionally provide a valid-data mask: a boolean ``xarray.DataArray`` with the same ``dims`` and coords`` as the input
+You may also optionally provide a valid-data mask: a boolean :class:`xarray.DataArray` with the same ``dims`` and ``coords`` as the input
 data.  Pixels that are False in the mask will normally have zero alpha channel in the output.
 
-There are two API functions that provide this functionality: ``apply_ows_style``, ``apply_ows_style_cfg``:
+There are two API functions that provide this functionality: :py:function:`~datacube_ows.styles.api.apply_ows_style`, :py:function:`~datacube_ows.styles.api.apply_ows_style_cfg`:
 
 ::
 

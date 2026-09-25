@@ -6,9 +6,9 @@ OWS Database Documentation
 Datacube OWS uses three groups of database
 entities:
 
-1. `ODC native entities <#open-data-cube-native-entities>`_
-2. `OWS materialised views over ODC indexes <#materialised-views-over-odc-indexes>`_
-3. `OWS range tables <#range-tables-layer-extent-cache>`_.
+1. :ref:`ODC native entities <open-data-cube-native-entities>`
+2. :ref:`OWS materialised views over ODC indexes <materialised-views-over-odc-indexes-postgres-driver-only>`
+3. :ref:`OWS range tables <ranges-table-layer-extent-cache>`.
 
 System Architecture Diagram
 ---------------------------
@@ -17,6 +17,8 @@ System Architecture Diagram
     :target: /_images/ows_diagram1.9.png
 
     OWS Architecture Diagram, including Database structure.
+
+.. _open-data-cube-native-entities:
 
 Open Data Cube Native Entities
 ------------------------------
@@ -29,6 +31,8 @@ See
 
 This schema is created and maintained with the ``datacube`` command.
 OWS only needs read access to this schema.
+
+.. _materialised-views-over-odc-indexes-postgres-driver-only:
 
 Materialised Views over ODC Indexes (Postgres driver only)
 ----------------------------------------------------------
@@ -48,6 +52,8 @@ With the new postgis index driver, the functionality provided by the
 materialised views is available directly from the ODC index, and so
 no materialised views are  required.
 
+.. _ranges-table-layer-extent-cache:
+
 Ranges Table (Layer Extent Cache)
 ---------------------------------
 
@@ -57,7 +63,7 @@ for generating GetCapabilities documents efficiently.
 Creating/Maintaining the OWS Schema
 -----------------------------------
 
-Creating or updating an OWS schema is performed with following options to ``datacube-ows-update``.
+Creating or updating an OWS schema is performed with following options to :program:`datacube-ows-update`.
 
 Note that the options in this section requires database superuser/admin privileges.
 
@@ -65,7 +71,7 @@ Note that the options in this section requires database superuser/admin privileg
 Creating or Updating the OWS Schema
 ===================================
 
-The ``--schema`` option to ``datacube-ows-update`` creates a new OWS schema if it does not exist, or
+Running :option:`datacube-ows-update --schema` creates a new OWS schema if it does not exist, or
 updates to the form required by the installed version of ``datacube-ows``::
 
     datacube-ows-update --schema
@@ -153,9 +159,9 @@ and space views into a single space-time view) is done
 CONCURRENTLY. This means that it may not take effect until
 some minutes after ``datacube-ows-update`` exits.
 
-DO NOT ATTEMPT TO REFRESH VIEWS NON-CONCURRENTLY IN A PRODUCTION
-ENVIRONMENT. This will leave OWS broken and unable to respond to
-requests until the refresh is complete.
+.. warning:: DO NOT ATTEMPT TO REFRESH VIEWS NON-CONCURRENTLY IN A PRODUCTION ENVIRONMENT.
+
+   This will leave OWS broken and unable to respond to requests until the refresh is complete.
 
 In a production environment you should not be refreshing views
 much more than 2 or 3 times a day unless your database is small
@@ -186,6 +192,8 @@ In a ``postgres`` driver production environment, this should be run after refres
 as described above (after waiting a couple of minutes for the final refresh to complete).
 
 In a ``postgis`` driver production environment, this is the only required regular maintenance task.
+
+.. _database-updating-range-tables:
 
 ===========================================
 Updating range tables for individual layers

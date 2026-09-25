@@ -12,23 +12,25 @@ each pixel is mapped to one particular colour from a fixed pallet
 by applying a logical decision tree to the flag data for that pixel.
 
 Colour-map styles support the
-`elements common to all styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#common-elements>`_.
+:ref:`elements common to all styles <styling-common-elements>`.
 
-Colour-map styles also have `value_map <#value-map>`_ entry that describes
+Colour-map styles also have :ref:`value_map <value-map>` entry that describes
 how the colour of individual pixels is determined.
 
-Colour-map styles support `automatic legend generation <#legend>`_.
+Colour-map styles support :ref:`automatic legend generation <legend>`.
+
+.. _value-map:
 
 ---------
 value_map
 ---------
 
-The ``value_map`` is dictionary mapping bands to a list of `value rules <#value-rule-format>`_.
+The ``value_map`` is dictionary mapping bands to a list of :ref:`value rules <value-rule-format>`.
 The key is a name or alias of a bitmap band.  Multiple bands are possible
 but it is strongly recommended to use only a single band, because the order in which
 rules are processed cannot be guaranteed in a multiple band scenario.
 
-A value rule set is a list of `value rules <#value-rule-format>`_.  The rules are applied in order.  Each pixel
+A value rule set is a list of :ref:`value rules <value-rule-format>`.  The rules are applied in order.  Each pixel
 will take the the colour specified by the first value rule in the set that the pixel satisifies.  Any pixel
 that does not match any rules will be fully transparent.
 
@@ -56,6 +58,8 @@ E.g.::
         # ],
     },
 
+.. _value-rule-format:
+
 Value Rule Format
 =================
 
@@ -70,7 +74,7 @@ be a floating point number between 0.0 (fully transparent) and 1.0 (fully opaque
 and defaults to 1.0 (i.e. fully transparent).  The ``mask`` entry is boolean (default
 False).  Setting ``mask`` to true is the same equivalent to setting ``alpha`` to
 0.0.  (A third option would be to use the standard style
-`pq_masks <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#bit-flag-masks-pq-masks>`_.
+:ref:`pq_masks <styling-pq-masks>`.
 Bit-flag Masks (pq_masks)
 
 syntax.)
@@ -91,6 +95,8 @@ E.g.::
     # Fully transparent (note that color is required but not used)
     "color": "#999999",
     "mask": True
+
+.. _title-and-abstract:
 
 Title and Abstract
 ++++++++++++++++++
@@ -120,6 +126,8 @@ Each Value Rule must also specify the rule to evaluate when it applies.
 For details, refer to the
 :doc:`OWS Masking Syntax <cfg_masks>`.
 
+.. _legend:
+
 ------
 Legend
 ------
@@ -128,11 +136,11 @@ Colour map styles support automatic legend configuration.
 
 Automatic legend generation can be deactivated using the
 ``show_legend`` and ``url`` legend elements
-`common to all styles <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#legend>`_.
+:ref:`common to all styles <styling-legend>`.
 (``show_legend`` is ``True`` by default for colour-map styles.)
 
 A patch and label is added to the legend for each value rule in the
-configuration.  See `title and abstract <#title-and-abstract>`_ for
+configuration.  See :ref:`title and abstract <title-and-abstract>` for
 customising the label of each rule.
 
 Legend Title
@@ -211,13 +219,13 @@ Multi-Date Requests
 -------------------
 
 Colour Map Styles support three approaches to
-`multi-date requests <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#multi-date>`_.
+:ref:`multi-date requests <styling-multi-date>`.
 
-In addition to `standard animated handlers <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#multi-date>`_
+In addition to :ref:`standard animated handlers <styling-multi-date>`
 as supported by all style types, Colour Map Styles support two additional approaches
 to produce an non-animated image from a multi-date request:
 
-1. Using a variant of the `value_map`_ entry used for the single-date case. This
+1. Using a variant of the :ref:`value_map <value-map>` entry used for the single-date case. This
    is a much simpler way of achieving most use cases.
 2. Using an aggregator function, which allows for fully customisable behaviour but
    requires writing Python code.
@@ -226,8 +234,8 @@ Multi-date value_map
 ====================
 
 A value_map in a multi-date handler has the same general structure as the
-single date `value_map`_ described above.  The handler must serve a single
-number of date values.  The discussion here will assume an `allowed_count_range``
+single date :ref:`value_map <value-map>` described above.  The handler must serve a single
+number of date values.  The discussion here will assume an ``allowed_count_range``
 of ``[2, 2]``, but higher values should work.
 
 The ``flags`` or ``values`` (and invert) entry for each rule is replaced by a list of

@@ -21,11 +21,13 @@ A mask rule defines a pixel test against one or more bands in an image dataset, 
 pixels for further processing (e.g. for transparency masking or colour coding)
 
 This can be done either by treating the band as a bit-flag (
-with the `flags <#bitflag-rules-flags>`_ entry) or as an enumeration (
-with the `values <#enumeration-rules-values>`_ entry).
+with the :ref:`flags <bitflag-rules-flags>` entry) or as an enumeration (
+with the :ref:`values <enumeration-rules-values>` entry).
 
 A mask rule will always be associated with a particular measurement band, but the details of how
 this association is determined varies by context.
+
+.. _bitflag-rules-flags:
 
 Bitflag Rules (flags)
 +++++++++++++++++++++
@@ -96,6 +98,8 @@ E.g.::
             }
         }
     }
+
+.. _enumeration-rules-values:
 
 Enumeration Rules (values)
 ++++++++++++++++++++++++++

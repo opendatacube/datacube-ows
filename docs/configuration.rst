@@ -4,8 +4,6 @@ OWS Configuration
 
 .. toctree::
    :maxdepth: 2
-   :hidden:
-   :glob:
 
    cfg_global
    cfg_wms
@@ -40,8 +38,7 @@ note that there are some important differences:
 3. JSON does not allow commas after the last element of lists and objects (dictionaries in Python terms).
 4. JSON does not support comments of any kind.
 
-`This general introductory stuff is boring.  Take me straight to the description of the
-configuration file. <#general-config-structure>`_
+:ref:`This general introductory stuff is boring. Take me straight to the description of the configuration file. <general-config-structure>`
 
 .. _location:
 
@@ -192,6 +189,8 @@ can be supplied in any of the following ways:
 Note that this does not just apply when the included python or json entity is a dictionary/object.
 Any of the above include directives could expand to an array, or even to single integer or string.
 
+.. _configuration-inheritance:
+
 Configuration Inheritance
 -------------------------
 
@@ -259,9 +258,9 @@ There are two types of named configuration object that support inheritance:
 named :doc:`Layers <cfg_layers>` and
 :doc:`Layer Styles <cfg_styling>`.
 The exact way to inherit by name differs depending on the object type so
-`see <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#inheritance>`_
+:ref:`see <layers-inheritance>`
 the
-`relevant <https://datacube-ows.readthedocs.io/en/latest/cfg_styling.html#inheritance>`_
+:ref:`relevant <styling-inheritance>`
 sections for details.
 
 The copying and updating of the parent configuration object is recursive
@@ -271,7 +270,7 @@ been parsed by the config parser - i.e. it must appear earlier in the definition
 This restriction can be avoided using direct inheritance.
 
 Behaviour of Lists
-++++++++++++++++++
+==================
 
 Care should be taken of the special handling of lists in configuration:
 
@@ -358,6 +357,8 @@ Or::
 
 
 
+.. _configuration-metadata-separation:
+
 Metadata Separation and Internationalisation
 --------------------------------------------
 
@@ -366,8 +367,10 @@ use-cases like multi-language internationalisation and integrating metadata with
 content management systems, all human-readable metadata in the OWS configuration can be extracted
 into a separate file and managed independently.
 
+.. _metadata-separation:
+
 Metadata Separation
-+++++++++++++++++++
+===================
 
 To separate your metadata from config (either as an end in itself, or as preparation for internationalisation/translation):
 
@@ -420,10 +423,10 @@ Fields that can be included in the message file are:
    then the resulting combined value "less than 0.0" WILL be picked up the translation engine.
 
 Internationalisation/Translation of Metadata
-++++++++++++++++++++++++++++++++++++++++++++
+============================================
 
 Once you have extracted your metadata into a single file, separate from the main body of configuration,
-as described `above <#metadata-separation>`_, generate a translation catalog for every language you want
+as described :ref:`above <metadata-separation>`, generate a translation catalog for every language you want
 translations for - including the "native" language that your messages file is already in:
 
 ::
@@ -464,9 +467,11 @@ This creates the following machine-readable message (.mo) files:
    /config/translations/sw/LC_MESSAGES/my_ows_project.mo
 
 You can now update the
-`global section of your OWS Configuration <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#metadata-separation-and-internationalisation>`_
+:ref:`global section of your OWS Configuration <cfg-global-metadata-separation>`
 section and restart the web service and
 you are serving multi-lingually!  (Adjust your client's "Accept-Language" header to test.)
+
+.. _general-config-structure:
 
 General Config Structure
 ------------------------
@@ -502,13 +507,13 @@ services aross all layers.
 The :doc:`wmts <cfg_wmts>` section contains configuration that applies to the WMTS
 services aross all layers.
 The :doc:`wms <cfg_wms>` section can be omitted if only the WCS service is
-activated (specified in the `global services <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#service-selection-services>`_
+activated (specified in the :ref:`global services <services>`
 section), or if the default values for all entries are acceptable.
 
 The :doc:`wmts <cfg_wmts>` section is optional.
 
 The :doc:`wcs <cfg_wcs>` section must be supplied if the WCS service is
-activated (specified in the `global services <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#service-selection-services>`_
+activated (specified in the :ref:`global services <services>`
 section).
 
 WMTS is implemented as a thin wrapper around the WMS implementation. Therefore configuration in the

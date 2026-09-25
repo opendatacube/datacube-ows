@@ -105,7 +105,7 @@ can apply this style to the data, and write the result to disk as a PNG file:
 
 The resulting image looks like this:
 
-.. image:: https://user-images.githubusercontent.com/4548530/112110854-96f17b80-8c07-11eb-9f21-ab5ff49b9fda.png
+.. image:: images/components-simple-rgb.webp
     :width: 600
 
 If you are using a notebooks based environment like JupyterHub, you can display the image using the ``plot_image`` API functions:
@@ -119,7 +119,7 @@ If you are using a notebooks based environment like JupyterHub, you can display 
     plot_image_with_style_cfg(rgb_cfg, data, x="longitude", y="latitude")
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/112110854-96f17b80-8c07-11eb-9f21-ab5ff49b9fda.png>`_
+<images/components-simple-rgb.webp>`_
 
 Refer to :doc:`the Style API documentation <cfg_style_api>` for more
 information about the OWS styling API.
