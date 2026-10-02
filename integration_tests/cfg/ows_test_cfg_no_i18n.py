@@ -483,7 +483,7 @@ ows_cfg = {
                 "format": "image/png",
             },
         },
-        # Supported co-ordinate reference systems. Any coordinate system supported by GDAL and Proj.4J can be used.
+        # Supported coordinate reference systems. Any coordinate system supported by GDAL and Proj.4J can be used.
         # At least one CRS must be included.  At least one geographic CRS must be included if WCS is active.
         # Web Mercator (EPSG:3857) and WGS-84 (EPSG:4326) are strongly recommended, but not required.
         "published_CRSs": {

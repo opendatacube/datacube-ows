@@ -19,8 +19,8 @@ the semantics were the same: a float between 0.0 (fully transparent) and 1.0 (fu
 
 The remaining two approaches to transparency are the subject of this chapter.
 
-.. [1] Actually five, but one is `beyond the scope of this
-       HOWTO. <https://datacube-ows.readthedocs.io/en/latest/cfg_layers.html#extent-mask-function-extent-mask-func>`_
+.. [1] Actually five, but one is :ref:`beyond the scope of this
+       HOWTO. <layers-extent-mask-func>`
 
 Masking
 +++++++
@@ -96,11 +96,11 @@ vegetation (npv)" band mapped to blue.
         "scale_range": [0.0, 100.0],
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/113671209-66c2d600-96f9-11eb-8354-43a64ec1d134.png
+.. image:: images/transparency-fractional-cover-unmasked.webp
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/113671209-66c2d600-96f9-11eb-8354-43a64ec1d134.png>`__
+<images/transparency-fractional-cover-unmasked.webp>`__
 
 As you can clearly see from comparing this image to the colour map examples in the last chapter,
 areas of cloud and water give false positives as npv.
@@ -138,11 +138,11 @@ keep in the image - pixels that fail any of the pq_mask rules will be transparen
         ]
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/113673585-89a2b980-96fc-11eb-9b73-cfb222c7c621.png
+.. image:: images/transparency-mask-invalid-pixels.webp
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/113673585-89a2b980-96fc-11eb-9b73-cfb222c7c621.png>`__
+<images/transparency-mask-invalid-pixels.webp>`__
 
 Example: Enumeration masking
 &&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -167,11 +167,11 @@ can be done using ``enum`` masking rules:
         ]
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/113792315-f95e8600-9788-11eb-939b-6099fe2ec5d7.png
+.. image:: images/transparency-enum-mask.webp
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/113792315-f95e8600-9788-11eb-939b-6099fe2ec5d7.png>`__
+<images/transparency-enum-mask.webp>`__
 
 What happened here?  Remember pq_masking rules specify the values to keep, so setting enum to 1 means that we
 only keep pixels which are marked nodata in WOFS - everything else becomes transparent.
@@ -200,11 +200,11 @@ match the rule and make pixels that do transparent:
         ]
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/113792888-59096100-978a-11eb-9781-b266dc8f40ee.png
+.. image:: images/transparency-inverted-enum-mask.webp
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/113792888-59096100-978a-11eb-9781-b266dc8f40ee.png>`__
+<images/transparency-inverted-enum-mask.webp>`__
 
 Example: Complex logic
 &&&&&&&&&&&&&&&&&&&&&&
@@ -252,11 +252,11 @@ Finally we look at a more complex example:
 This is not a particularly useful visualisation, but it hopefully demonstrates how everything fits together
 when building up mask logic.
 
-.. image:: https://user-images.githubusercontent.com/4548530/113793657-29f3ef00-978c-11eb-951a-c9c7488631de.png
+.. image:: images/transparency-complex-logic.webp
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/113793657-29f3ef00-978c-11eb-951a-c9c7488631de.png>`__
+<images/transparency-complex-logic.webp>`__
 
 Alpha Masking in Component Styles
 +++++++++++++++++++++++++++++++++
@@ -277,8 +277,7 @@ Example: Alpha masking in component styles
 &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 For this example, we return to the Queensland geomedian example data we used in the
-`at the start of this HOWTO guide.
-<https://datacube-ows.readthedocs.io/en/latest/style_howto_components.html#simple-linear-components>`_
+:ref:`at the start of this HOWTO guide. <howto-simple-linear-components>`
 
 This example uses a simple red-green-blue visualisation as the base image, with transparency based on
 NDVI - pixels with NDVI over 0.5 are shown fully opaque, pixels with NDVI <= 0.0 are shown fully
@@ -304,11 +303,11 @@ transparent with values between 0 and 0.5 shown partially transparent:
         "scale_range": (50, 3000),
     }
 
-.. image:: https://user-images.githubusercontent.com/4548530/113795937-5d854800-9791-11eb-9a49-25ea8cbced64.png
+.. image:: images/transparency-component-alpha-ndvi.webp
     :width: 600
 
 `View full size
-<https://user-images.githubusercontent.com/4548530/113795937-5d854800-9791-11eb-9a49-25ea8cbced64.png>`_
+<images/transparency-component-alpha-ndvi.webp>`_
 
 :doc:`In the next chapter
 <style_howto_legends>` we look at how to generate

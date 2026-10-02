@@ -28,10 +28,10 @@ The "layers" section is a list of Layer configurations.
 
 A layer may be either:
 
-* A `named layer <#named-layers>`_ which represents a queryable
+* A :ref:`named layer <named-layers>` which represents a queryable
   WMS layer and a corresponding WCS coverage
 
-* A `folder layer <#folder-layers>`_ which represents
+* A :ref:`folder layer <folder-layers>` which represents
   a folder in WMS, allowing layers to be organised in a
   hierarchical way. Folder layers are not themselves queryable but
   themselves contain a list of further child layers, which in
@@ -43,11 +43,13 @@ hierarchy of coverages, and so simply uses a flattened
 list of all declared named layers for it's list of
 coverages.
 
+.. _common-elements:
+
 Common Elements
 ===============
 
 The following configuration entries and sections apply to both
-`named layer <#named-layers>`_ and `folder layer <#folder-layers>`_.
+:ref:`named layer <named-layers>` and :ref:`folder layer <folder-layers>`.
 
 ------------------
 Title and Abstract
@@ -59,7 +61,7 @@ and is required for all layers.
 The "abstract" entry provides a longer human-readable description
 of the layer.  "Abstract" is required for top-level layers -
 layers directly included in the "layers" section. Layers that are
-included via a `folder layer <#folder-layers>`_ can omit the abstract,
+included via a :ref:`folder layer <folder-layers>` can omit the abstract,
 in which case the abstract of the parent layer is used.
 
 E.g.
@@ -84,7 +86,7 @@ and cumulative.  A layer will advertise all of:
 
 * The keywords defined for all parent folder layers in the layer hierarchy.
 
-* The keywords defined in the `global keywords <https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#optional-metadata>`_ section.
+* The keywords defined in the :ref:`global keywords <cfg-global-optional-metadata>` section.
 
 E.g.:
 
@@ -103,25 +105,26 @@ Attribution is optional and is used by WMS only.
 
 Attribution is hierarchical - if not supplied the setting from the closest parent
 layer that has an attribution is used.  Or if no parent layers supply an attribution
-either then the default value defined in `the wms section <https://datacube-ows.readthedocs.io/en/latest/cfg_wms.html#default-attribution-attribution>`_
+either then the default value defined in :ref:`the wms section <default-attribution-attribution>`
 is used.  Or if there is no default value defined either, no attribution will be
 reported.
 
 The structure of the attribution section is the same as described in
-`the wms section <https://datacube-ows.readthedocs.io/en/latest/cfg_wms.html#default-attribution-attribution>`_.
+:ref:`the wms section <default-attribution-attribution>`.
+
+.. _folder-layers:
 
 Folder Layers
 =============
 
-In addition to the `common elements <#common-elements>`_ described
+In addition to the :ref:`common elements <common-elements>` described
 above, folder layers have a "layers" element which is a list of child
 layers (which may be named layers, folder layers with their own
 child layers).
 
 A folder layer may also have a ``label`` element which is used only
 for
-`metadata separation and internationalisation
-<https://datacube-ows.readthedocs.io/en/latest/configuration.html#metadata-separation-and-internationalisation>`_.
+:ref:`metadata separation and internationalisation <configuration-metadata-separation>`.
 Each folder's layer
 must be globally unique.  A unique label based on the folder's position
 in the folder hierarchy is generated if one is not supplied.
@@ -150,13 +153,15 @@ E.g.
         }
     ]
 
+.. _named-layers:
+
 Named Layers
 ============
 
 A named layer describes a queryable layer (WMS/WMTS) and the corresponding
 coverage (WCS).
 
-In addition to the `common elements <#common-elements>`_ described
+In addition to the :ref:`common elements <common-elements>` described
 above, named layers have the following configuration elements:
 
 ----
@@ -186,10 +191,10 @@ Product Layers and Multiproduct Layers
 --------------------------------------
 
 Named layers can map to either a single Open Data Cube product
-(a `Product Layer <#product-layer-configuration-product-name>`_), or
+(a :ref:`Product Layer <product-layer-configuration-product-name>`), or
 to several Open Data Cube products with identical band and
 metadata structure (e.g. matching Sentinel-2A and Sentinel-2B
-products) (a `Multiproduct Layer <#multiproduct-configuration-multi-product-product-names>`_).
+products) (a :ref:`Multiproduct Layer <multiproduct-layer-configuration-multi-product-product-names>`).
 
 It also possible to combine bands with differing
 bands, but only bands common to both products can be accessed.
@@ -202,6 +207,8 @@ as long as the following rules are obeyed for all supported bands:
 
 1) Each band must have at least one ODC alias in common across all included products
 2) Each band must have the same datatype (``numpy.dtype``) and nodata value across all included products.
+
+.. _product-layer-configuration-product-name:
 
 ------------------------------------------
 Product Layer Configuration (product_name)
@@ -222,6 +229,8 @@ E.g.
         "product_name": "ls8_ard",
         ...
     }
+
+.. _multiproduct-layer-configuration-multi-product-product-names:
 
 ---------------------------------------------------------------
 Multiproduct Layer Configuration (multi_product, product_names)
@@ -271,6 +280,8 @@ preference to Landsat where both are available:
         ...
     }
 
+.. _low-resolution-summary-products-low-res-product-name-s:
+
 ---------------------------------------------------------
 Low-Resolution Summary Products - low_res_product_name(s)
 ---------------------------------------------------------
@@ -302,7 +313,7 @@ or for multi-product layers:
     "low_res_product_names": ["summary_product_1", "summary_product_2"]
 
 The conditions under which to switch to the low-resolution product(s)
-are defined in the `resource_limits <#resource-limits-resource-limits>`_
+are defined in the :ref:`resource_limits <resource-limits-resource-limits>`
 section, discussed below.
 
 -------------------------
@@ -364,7 +375,7 @@ Time Resolution (time_resolution)
 The "time_resolution" specifies how data timestamps on the data
 are mapped to user-accessible dates. The acceptable values are:
 
-* "solar" (default)
+`solar` (default)
   Data is expected to have a center-time reflecting when
   the data was captured.  This is mapped to a local solar day.
   (i.e. the date below the satellite at the time, not relative
@@ -374,12 +385,12 @@ are mapped to user-accessible dates. The acceptable values are:
   supported for backwards compatibility, but will raise a deprecation
   warning advising to use "solar" instead.
 
-* "subday"
+`subday`
   The raw start datetime of datasets are used with the time portion intact.
 
   Used for hourly, minutely or other sub-day-resolution data.
 
-* "summary"
+`summary`
   Data has time dimension based on the start date of start datetime of datasets,
   which are expected to have a `00:00:00.0000+00` time portion.
 
@@ -387,13 +398,17 @@ are mapped to user-accessible dates. The acceptable values are:
 
   Note that because only the start date is used, overlapping date ranges like:
 
-  `2020-01-01 -> 2021-01-01`
-  `2021-01-01 -> 2022-01-01`
+  ::
+
+    2020-01-01 -> 2021-01-01
+    2021-01-01 -> 2022-01-01
 
   or:
 
-  `2019-01-01 -> 2021-12-31 23:59:59`
-  `2020-01-01 -> 2022-12-31 23:59:59`
+  ::
+
+    2019-01-01 -> 2021-12-31 23:59:59
+    2020-01-01 -> 2022-12-31 23:59:59
 
   are now both supported.
 
@@ -405,7 +420,7 @@ Any time component in the request will be ignored, except for layers that explic
 have "subday" time resolution.
 
 Note that it will usually be necessary to rerun
-`datacube-ows-update <https://datacube-ows.readthedocs.io/en/latest/database.html#updating-range-tables-for-individual-layers>`_
+:ref:`datacube-ows-update <database-updating-range-tables>`
 for a layer after changing the time resolution.
 
 -------------------------------------
@@ -497,6 +512,8 @@ or
         "disable": True
     },
 
+.. _layers-bands-dictionary:
+
 ------------------------
 Bands Dictionary (bands)
 ------------------------
@@ -578,8 +595,7 @@ allows OWS to treat the entire layer as a single coverage, and
 are used for calculating request resource limits.
 
 The native_crs can be any CRS
-declared in the `global published_CRSs section
-<https://datacube-ows.readthedocs.io/en/latest/cfg_global.html#co-ordinate-reference-systems-published-crss>`_
+declared in the :ref:`global published_CRSs section <published-crss>`
 and need not be related to the CRSs that the data is actually
 stored in.
 
@@ -602,6 +618,8 @@ E.g.
         "native_crs": "EPSG:3577",
         "native_resolution": [25.0, 25.0],
 
+.. _resource-limits-resource-limits:
+
 ---------------------------------
 Resource Limits (resource_limits)
 ---------------------------------
@@ -612,16 +630,16 @@ available to a single request).  Datacube-ows provides several
 mechanisms to avoid excessive resource consumption by either:
 
 1. progressively increasing the cache-control header max-age value to
-allow expensive requests to be cached for longer and prevent cheap
-requests from flooding the cache; and/or
+   allow expensive requests to be cached for longer and prevent cheap
+   requests from flooding the cache; and/or
 
 2. terminating potentially expensive queries early, preventing them
-from consuming excessive resources.
+   from consuming excessive resources.
 
 These mechanisms are configured in the "resource_limits" section,
 which is a dictionary with two independent sub-sections
-`wms <#resource-limits-wms>`_ (for WMS and WMTS) and
-`wcs <#resource-limits-wcs>`_ (for WCS), described in
+:ref:`wms <resource-limits-wms>` (for WMS and WMTS) and
+:ref:`wcs <resource-limits-wcs>` (for WCS), described in
 detail below.
 
 E.g.
@@ -661,12 +679,14 @@ E.g.
         }
     }
 
+.. _resource-limits-wms:
+
 Resource Limits (wms)
 +++++++++++++++++++++
 
 When a WMS GetMap (WMTS GetTile) request exceeds a configured resource
 limit setting, one of the following will occur depending on the value
-of the `low-resolution summary product(s) <#low-resolution-summary-products-low-res-product-name-s>`_
+of the :ref:`low-resolution summary product(s) <low-resolution-summary-products-low-res-product-name-s>`
 setting.
 
 If a low-resolution summary product has been defined, then requests that exceed
@@ -693,7 +713,7 @@ the list.  The entry is optional and defaults to (150, 180, 200, 160) -
 a semi-transparent light blue.
 
 Note that this entry has no effect if
-`low-resolution summary product(s) <#low-resolution-summary-products-low-res-product-name-s>`_
+:ref:`low-resolution summary product(s) <low-resolution-summary-products-low-res-product-name-s>`
 have been declared for the product.
 
 ++++++++++++++
@@ -774,6 +794,8 @@ transformation from the source data to the output image.)
 
 Values around 250.0-800.0 are usually appropriate.  ``min_zoom_factor`` is optional and
 defaults to None, which means the limit is not applied.
+
+.. _dataset-cache-rules:
 
 +++++++++++++++++++
 dataset_cache_rules
@@ -859,6 +881,8 @@ Cache-control header is returned according to the number of datasets hit:
 * 8-12 datasets: max-age: 604800
 * 13+ datasets:  no-cache   (high resource fallback - polygons or low-res summary product)
 
+.. _resource-limits-wcs:
+
 Resource Limits (wcs)
 +++++++++++++++++++++
 
@@ -870,15 +894,17 @@ do not.
 When a WCS GetCoverage request exceeds a configured resource
 limit setting, either an error is returned to the user, or the
 request is satisfied from the
-`low-resolution summary product(s) <#low-resolution-summary-products-low-res-product-name-s>`_
+:ref:`low-resolution summary product(s) <low-resolution-summary-products-low-res-product-name-s>`
 depending on which limit(s) have been exceeded, and whether a low-resolution
 summary product has been defined. See the documentation for each limit below for details.
+
+.. _layers-wcs-cache-control:
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 Cache Control (dataset-cache-rules and describe_cache_maxage)
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-The `dataset_cache_rules <#dataset-cache-rules>`_ element is also
+The :ref:`dataset_cache_rules <dataset-cache-rules>` element is also
 supported for WCS.  It behaves for WCS GetCoverage requests as
 documented above for WMS GetMap and WMTS GetTile requests.
 
@@ -886,7 +912,7 @@ An additional element, ``describe_cache_maxage`` is also provided,
 which controls the cache control headers for WCS DescribeCoverage requests
 for the coverage/layer.  This element is optional, and defaults
 to the value set in the
-`top-level WCS section <https://datacube-ows.readthedocs.io/en/latest/cfg_wcs.html#describeconverage-default-cache-control-headers-default-desc-cache-maxage>`_
+:ref:`top-level WCS section <wcs-desc-cache-maxage>`
 
 ++++++++++++
 max_datasets
@@ -920,6 +946,8 @@ corresponds to an image size of:
 If the image requested exceeds the ``max_image_size``, an error is always returned.
 
 
+.. _image-processing-section-image-processing:
+
 -------------------------------------------
 Image Processing Section (image_processing)
 -------------------------------------------
@@ -937,6 +965,8 @@ E.g.::
         "manual_merge": True,
         "apply_solar_corrections": True
     }
+
+.. _layers-extent-mask-func:
 
 Extent Mask Function (extent_mask_func)
 +++++++++++++++++++++++++++++++++++++++
@@ -995,6 +1025,8 @@ E.g.
     "extent_mask_func": "datacube_ows.ogc_utils.mask_by_quality",
     "always_fetch_bands": ["quality"],
 
+.. _fuse-function-fuse-func:
+
 Fuse Function (fuse_func)
 +++++++++++++++++++++++++
 
@@ -1012,6 +1044,8 @@ load_data() function - refer to the Open Data Cube documentation
 for calling conventions.
 
 Optional - default is to not use a fuse function.
+
+.. _manual-merge-manual-merge:
 
 Manual Merge (manual_merge)
 +++++++++++++++++++++++++++
@@ -1035,6 +1069,8 @@ This should not be used on "Level 2" or analysis-ready datacube products.
 
 "apply_solar_corrections" requires manual_merge to also be set.
 
+.. _layers-flag-processing:
+
 -------------------------------
 Flag Processing Section (flags)
 -------------------------------
@@ -1050,7 +1086,7 @@ related product, a completely independent product, or from any combination
 of these.
 
 Some entries have corresponding entries in
-the `image processing section <#image-processing-section-image-processing>`_
+the :ref:`image processing section <image-processing-section-image-processing>`
 described above.  Items in this section only affect WMS/WMTS.
 
 The flags section generally consists of a list of flag-band definitions.
@@ -1090,7 +1126,7 @@ Pixel-quality bitmask bands or enumeration flag bands can be used, although
 bitmask bands are better supported and are recommended where possible.
 
 If the flag product(s) is/are the same as the main data product(s), then
-an alias from the `bands dictionary <#bands-dictionary-bands>`_ may be used.
+an alias from the :ref:`bands dictionary <layers-bands-dictionary>` may be used.
 
 Note that it is not possible to combine flag bands from separate products
 if they have the same band name (unless one of the products is the main product
@@ -1107,7 +1143,7 @@ can be over-ridden with the "product" (for Product Layers) or "products"
 
 For Product Layers, specify a single ODC product name, for Multiproduct Layers,
 specify a list of ODC product names, which should map one-to-one to the main
-`product_names <#multiproduct-layer-configuration-multi-product-product-names>`_ list.
+:ref:`product_names <multiproduct-layer-configuration-multi-product-product-names>` list.
 
 E.g. Product Layer, flag band is in the main layer product:
 
@@ -1162,8 +1198,7 @@ Flag Fuse Function (fuse_func)
 ++++++++++++++++++++++++++++++
 
 Only applies if the flag band is read from a separate product
-(or product).  Equivalent to the `fuse function in the
-image_processing section <#fuse-function-fuse-func>`_.
+(or product).  Equivalent to the :ref:`fuse function in the image_processing section <fuse-function-fuse-func>`.
 
 If the global "load_driver" is set to "rio", ``fuse_func`` must be a string
 representing an importable, fully-qualified python function name (or None).
@@ -1177,8 +1212,7 @@ Manual Flag Merge (manual_merge)
 ++++++++++++++++++++++++++++++++
 
 Only applies if the flag band is read from a separate product
-(or product).  Equivalent to the `manual merge in the
-image_processing section <#manual-merge-manual-merge>`_.
+(or product).  Equivalent to the :ref:`manual merge in the image_processing section <manual-merge-manual-merge>`.
 Optional - defaults to False.
 
 Ignore Time (ignore_time)
@@ -1195,7 +1229,7 @@ Identifiers Section (identifiers)
 ---------------------------------
 
 The identifiers section is optional.  It is a dictionary mapping names from the
-`WMS authorities section <https://datacube-ows.readthedocs.io/en/latest/cfg_wms.html#identifier-authorities-authorities>`_
+:ref:`WMS authorities section <wms-identifier-authorities>`
 to an identifier for this layer, issued by each of those authorities.
 
 E.g.
@@ -1266,6 +1300,8 @@ days.
 This configuration option is provided to allow compatibility with other systems that
 do not use solar days and is not recommended for normal use.
 
+.. _layers-custom-includes:
+
 Custom Layer Includes (custom_includes)
 +++++++++++++++++++++++++++++++++++++++
 
@@ -1331,12 +1367,14 @@ The :doc:`"styling" section <cfg_styling>` describes the WMS and WMTS styles for
 the layer.
 
 
+.. _layers-inheritance:
+
 -----------
 Inheritance
 -----------
 
 Named layers may be
-`inherited <https://datacube-ows.readthedocs.io/en/latest/configuration.html#configuration-inheritance>`_
+:ref:`inherited <configuration-inheritance>`
 from previously defined layers.
 
 To lookup a layer by name use the "layer" element in the inherits section:
@@ -1357,7 +1395,9 @@ Restrictions on inheritance
 +++++++++++++++++++++++++++
 
 1. Note that a layer can only inherit by name from a parent layer that has already been parsed
-   by the config parser - i.e. it must appear earlier in the layer hierarchy.  This restriction
+   by the config parser -
+
+   i.e. it must appear earlier in the layer hierarchy.  This restriction
    can be avoided using direct inheritance.
 
 2. When inheriting from a multi-product layer, you must explicitly specify that it is a multi-product

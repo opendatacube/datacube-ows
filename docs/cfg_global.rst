@@ -43,12 +43,13 @@ Notes:
 2. For non-legacy loader drivers, fuser functions must be specified as a string (fully
    qualified Python name).
 
+.. _cfg-global-metadata-separation:
+
 Metadata Separation and Internationalisation
 ============================================
 
 The following global configuration items are relevant to
-`metadata separation and internationalisation
-<https://datacube-ows.readthedocs.io/en/latest/configuration.html#metadata-separation-and-internationalisation>`_.
+:ref:`metadata separation and internationalisation <configuration-metadata-separation>`.
 
 Message File (message_file)
 ---------------------------
@@ -206,22 +207,24 @@ E.g.:
        "https://secure.domain.com/ows",
    ]
 
-Co-ordinate Reference Systems (published_CRSs)
+.. _published-crss:
+
+Coordinate Reference Systems (published_CRSs)
 ==============================================
 
-The "published_CRSs" entry in the global sections declares the list of Co-ordinate
+The "published_CRSs" entry in the global sections declares the list of Coordinate
 Reference Systems supported by the server instance.
 
 It should be a dictionary of dictionaries, with the labels being recognised by Proj4
 (ideally EPSG codes, as in the example).  Other CRS formats (i.e. ESRI style WKID)
 can be supported by adding them as aliases in your proj4 configuration.
 
-The configuration for each Co-ordinate Reference System
+The configuration for each Coordinate Reference System
 contains the following entries:
 
 geographic
    Boolean indicating whether the projection is geographic, i.e. uses degrees latitude and longitude
-   as it's co-ordinates. Required.  Note that at least one geographic CRS must be published.
+   as it's coordinates. Required.  Note that at least one geographic CRS must be published.
 
 horizontal_coord
    The label of the horizontal coordinate.  Defaults to "longitude".
@@ -264,6 +267,8 @@ E.g.:
 
 If unsure of an `EPSG` code, search in http://epsg.io/
 
+
+.. _default-attribution-attribution:
 
 Default Attribution (attribution)
 =================================
@@ -326,6 +331,8 @@ E.g.
                 "format": "image/png",
             }
         },
+
+.. _cfg-global-optional-metadata:
 
 Other Optional Metadata
 =======================

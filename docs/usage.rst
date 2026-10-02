@@ -26,7 +26,7 @@ Datacube-OWS provides two command line tools:
 * ``datacube-ows-cfg`` which is used for managing
   :doc:`OWS configuration files <configuration>`.
 
-.. click:: datacube_ows.update_ranges_impl:main
+.. click:: datacube_ows.update_ranges:main
     :prog: datacube-ows-update
     :nested: full
 

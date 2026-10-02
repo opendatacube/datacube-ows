@@ -86,6 +86,15 @@ test = [
     "pytest_localserver",
     "pytest_mock",
 ]
+doc = [
+    "datacube-ows[webserver]",
+    "Sphinx>=8.2.3",
+    "sphinx-click",
+    "sphinx-autobuild",
+    'pydata-sphinx-theme',
+    'sphinx-design',
+    'sphinx-toolbox',
+]
 webserver = [
     "babel",
     "flask",
@@ -93,7 +102,7 @@ webserver = [
     "matplotlib",
     "prometheus_flask_exporter",
 ]
-all = ["datacube_ows[dev,ops,test]"]
+all = ["datacube_ows[dev,ops,test,doc]"]
 
 [project.scripts]
 datacube-ows = "datacube_ows.wsgi:main"
@@ -103,6 +112,9 @@ datacube-ows-update = "datacube_ows.update_ranges:main"
 [project.entry-points."datacube_ows.plugins.index"]
 postgis = "datacube_ows.index.postgis.api:ows_index_driver_init"
 postgres = "datacube_ows.index.postgres.api:ows_index_driver_init"
+
+[tool.esbonio.sphinx]
+pythonCommand = ["uv", "run", "python"]
 
 [tool.mypy]
 python_version = "3.12"
