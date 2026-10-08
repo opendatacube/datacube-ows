@@ -66,7 +66,7 @@ def create_range_entry(
                  """),
             {
                 "p_layer": layer.name,
-                "empty": Json(""),
+                "empty": Json({}),
                 "meta": Json(meta.as_json()),
                 "now": datetime.now(tz=UTC),
             },
