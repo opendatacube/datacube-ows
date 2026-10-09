@@ -23,6 +23,7 @@ dependencies = [
     "regex",
     "requests",
     "scipy",
+    "shapely!=2.2.0",  # Shapely 2.2.0 doesn't build with --no-build-packages
     "timezonefinder!=6.6.0",
     "urllib3",
     "xarray",
