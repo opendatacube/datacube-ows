@@ -221,6 +221,7 @@ gettile
 GetTile
 gh
 GHA
+ghcr
 GHCR
 github
 githubusercontent
@@ -478,6 +479,7 @@ wgs
 whatnick
 wholeworld
 WholeWorld
+willjnz
 wkid
 wkss
 WKT
