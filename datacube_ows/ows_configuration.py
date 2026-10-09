@@ -54,7 +54,12 @@ from datacube_ows.resource_limits import OWSResourceManagementRules, parse_cache
 from datacube_ows.styles import StyleDef
 from datacube_ows.tile_matrix_sets import TileMatrixSet
 from datacube_ows.time_utils import local_solar_date_range
-from datacube_ows.utils import group_by_begin_datetime, group_by_mosaic, group_by_solar
+from datacube_ows.utils import (
+    group_by_begin_datetime,
+    group_by_mosaic,
+    group_by_solar,
+    group_by_utc_day,
+)
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -536,6 +541,7 @@ class OWSFolder(OWSLayer):
 class TimeRes(Enum):
     SUBDAY = "subday"
     SOLAR = "solar"
+    UTC = "utc"
     SUMMARY = "summary"
 
     def is_subday(self) -> bool:
@@ -545,7 +551,13 @@ class TimeRes(Enum):
         return self == self.SOLAR
 
     def is_summary(self) -> bool:
-        return not self.is_solar() and not self.is_subday()
+        return self == self.SUMMARY
+
+    def is_utc(self) -> bool:
+        return self == self.UTC
+
+    def is_grouped_day(self) -> bool:
+        return self in (self.SOLAR, self.UTC)
 
     def allow_mosaic(self) -> bool:
         return not self.is_subday()
@@ -573,28 +585,35 @@ class TimeRes(Enum):
     def search_times(
         self, t: datetime.datetime | datetime.date, geobox: GeoBox | None = None
     ) -> datetime.datetime | tuple[datetime.datetime, datetime.datetime]:
+        if self.is_utc():
+            date: datetime.date = (
+                t if isinstance(t, datetime.date) else t.astimezone(datetime.UTC).date()
+            )
+            return (
+                datetime.datetime.combine(
+                    date, datetime.time(0, 0, 0), tzinfo=datetime.UTC
+                ),
+                datetime.datetime.combine(
+                    date, datetime.time(23, 59, 59), tzinfo=datetime.UTC
+                ),
+            )
         if self.is_solar():
             if geobox is None:
                 raise ValueError(
                     "Solar time resolution search_times requires a geobox."
                 )
-            times: datetime.datetime | tuple[datetime.datetime, datetime.datetime] = (
-                local_solar_date_range(geobox, t)
-            )
-        elif self.is_subday():
+            return local_solar_date_range(geobox, t)
+        if self.is_subday():
             # For subday products, return a single start datetime instead of a range.
             # mv_index will expand this to a one-second search range.
             # This prevents users from having to always use the full ISO timestamp in queries.
             assert isinstance(t, datetime.datetime)
-            times = t
-        else:
-            # For summary products, return a single start date instead of a range.
-            # mv_index will expand this to a one-day search range
-            # This allows data with overlapping time periods to be resolved by start date.
-            assert isinstance(t, datetime.date)
-            times = datetime.datetime.combine(t, datetime.time(), datetime.UTC)
-
-        return times
+            return t
+        # For summary products, return a single start date instead of a range.
+        # mv_index will expand this to a one-day search range
+        # This allows data with overlapping time periods to be resolved by start date.
+        assert isinstance(t, datetime.date)
+        return datetime.datetime.combine(t, datetime.time(), datetime.UTC)
 
     def dataset_groupby(
         self, product_names: list[str] | None = None, is_mosaic: bool = False
@@ -605,6 +624,8 @@ class TimeRes(Enum):
             return group_by_mosaic(product_names)
         if self.is_solar():
             return group_by_solar(product_names)
+        if self.is_utc():
+            return group_by_utc_day(product_names)
         return group_by_begin_datetime(product_names)
 
 

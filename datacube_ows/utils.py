@@ -108,6 +108,26 @@ def group_by_begin_datetime(
     )
 
 
+def group_by_utc_day(pnames: list[str] | None = None) -> GroupBy:
+    base_sort_key = lambda ds: ds.time.begin  # noqa: E731
+    if pnames:
+        index = {pn: i for i, pn in enumerate(pnames)}
+        sort_key = lambda ds: (index.get(ds.product.name), base_sort_key(ds))  # noqa: E731
+    else:
+        sort_key = base_sort_key
+    return GroupBy(
+        dimension="time",
+        group_by_func=lambda x: npdt64(
+            datetime.datetime.combine(
+                x.time.begin.astimezone(datetime.UTC).date(), datetime.time()
+            ),
+            "ns",
+        ),
+        units="seconds since 1970-01-01 00:00:00",
+        sort_key=sort_key,
+    )
+
+
 def group_by_solar(pnames: list[str] | None = None) -> GroupBy:
     base_sort_key = lambda ds: ds.time.begin  # noqa: E731
     if pnames:

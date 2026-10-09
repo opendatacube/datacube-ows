@@ -374,6 +374,12 @@ are mapped to user-accessible dates. The acceptable values are:
   supported for backwards compatibility, but will raise a deprecation
   warning advising to use "solar" instead.
 
+* "utc"
+  Similar to "solar", except UTC date is used.
+
+  This may be desirable for layers that (for example) cover circumpolar regions where
+  the concept of "solar day" doesn't meaningfully apply.
+
 * "subday"
   The raw start datetime of datasets are used with the time portion intact.
 
