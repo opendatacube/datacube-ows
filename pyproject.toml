@@ -23,6 +23,7 @@ dependencies = [
     "regex",
     "requests",
     "scipy",
+    "shapely!=2.2.0",  # Shapely 2.2.0 doesn't build with --no-build-packages
     "timezonefinder!=6.6.0",
     "urllib3",
     "xarray",
@@ -167,5 +168,5 @@ include = ["datacube*"]
 
 [tool.setuptools_scm]
 write_to = "datacube_ows/_version.py"
-fallback_version = "1.9.15"
+fallback_version = "1.9.16"
 version_scheme = "post-release"
