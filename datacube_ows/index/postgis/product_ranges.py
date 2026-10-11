@@ -138,8 +138,9 @@ def create_range_entry(
                     {"prodids": prodids},
                 )
                 for result in results:
-                    for dat_ran in result[0]:
-                        dates.add(dat_ran.lower)
+                    if result is not None:
+                        for dat_ran in result[0]:
+                            dates.add(dat_ran.lower)
 
             if layer.time_resolution.is_subday():
                 date_formatter = lambda d: d.isoformat()  # noqa: E731

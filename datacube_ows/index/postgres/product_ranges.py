@@ -153,8 +153,9 @@ def create_range_entry(
                     {"prodids": prodids},
                 )
                 for result in results:
-                    for dat_ran in result[0]:
-                        dates.add(dat_ran.lower)
+                    if result is not None:
+                        for dat_ran in result[0]:
+                            dates.add(dat_ran.lower)
 
             if layer.time_resolution.is_subday():
                 date_formatter = lambda d: d.isoformat()  # noqa: E731
@@ -177,11 +178,14 @@ def create_range_entry(
             # Get extent polygon from materialised views
 
             extent_4386 = cast(
-                "Geometry",
+                "Geometry | None",
                 mv_search(layer.dc, MVSelectOpts.EXTENT, products=layer.products),
             )
-
-            all_bboxes = bbox_projections(extent_4386, layer.global_cfg.crses)
+            all_bboxes = (
+                {}
+                if extent_4386 is None
+                else bbox_projections(extent_4386, layer.global_cfg.crses)
+            )
 
             conn.execute(
                 text("""
