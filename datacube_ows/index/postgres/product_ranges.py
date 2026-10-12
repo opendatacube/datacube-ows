@@ -155,7 +155,11 @@ def create_range_entry(
                 for result in results:
                     if result is not None:
                         for dat_ran in result[0]:
-                            dates.add(dat_ran.lower)
+                            dates.add(
+                                dat_ran.lower
+                                if layer.time_resolution.is_subday()
+                                else dat_ran.lower.date()
+                            )
 
             if layer.time_resolution.is_subday():
                 date_formatter = lambda d: d.isoformat()  # noqa: E731
