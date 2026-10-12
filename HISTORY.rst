@@ -7,6 +7,21 @@ History
 
 Datacube-ows version 1.9.x releases are designed to work with datacube-core versions 1.9.x.
 
+
+1.9.17 (2026-08-12)
+-------------------
+
+Emergency release to fix bugs in new "UTC Day" feature introduced in previous release
+
+What's Changed
+--------------
+* build(deps): bump astral-sh/uv from 0.12.23 to 0.12.24 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1723
+* Update ranges fixes (both drivers) by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1724
+* Fix duplicate dates for UTC time resolution. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1725
+* Prepare for 1.9.17 release by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1726
+
+**Full Changelog**: https://github.com/opendatacube/datacube-ows/compare/1.9.16...1.9.17
+
 1.9.16 (2026-08-09)
 -------------------
 
