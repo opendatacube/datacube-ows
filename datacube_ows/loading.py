@@ -84,7 +84,11 @@ class ProductBandQuery:
                         "Style band not in needed bands list"
                     )
             else:
-                pq_products = fp.low_res_products if resource_limited else fp.products
+                pq_products = (
+                    fp.low_res_products
+                    if resource_limited and fp.low_res_products
+                    else fp.products
+                )
                 queries.append(
                     cls(
                         pq_products,
@@ -141,7 +145,11 @@ class ProductBandQuery:
         fuse_func: FuserFunc | str | None = None,
         resource_limited: bool = False,
     ) -> ProductBandQuery:
-        main_products = layer.low_res_products if resource_limited else layer.products
+        main_products = (
+            layer.low_res_products
+            if resource_limited and layer.low_res_products
+            else layer.products
+        )
         return cls(
             main_products,
             bands,
