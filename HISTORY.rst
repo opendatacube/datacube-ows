@@ -8,7 +8,27 @@ History
 Datacube-ows version 1.9.x releases are designed to work with datacube-core versions 1.9.x.
 
 
-1.9.17 (2026-08-12)
+1.9.18 (2026-10-16)
+-------------------
+
+Emergency release to fix extent polygon bug introduced in 1.9.16.
+
+What's Changed
+--------------
+
+* fix: Don't use low res products if not defined by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1730
+* Prepare for 1.9.18 release by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1731
+
+Automated updates
+-----------------
+
+* build(deps): bump astral-sh/uv from 0.12.24 to 0.13.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1727
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1728
+* build(deps): bump astral-sh/uv from 0.13.0 to 0.13.1 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1729
+
+**Full Changelog**: https://github.com/opendatacube/datacube-ows/compare/1.9.17...1.9.18
+
+1.9.17 (2026-10-12)
 -------------------
 
 Emergency release to fix bugs in new "UTC Day" feature introduced in previous release
@@ -22,7 +42,7 @@ What's Changed
 
 **Full Changelog**: https://github.com/opendatacube/datacube-ows/compare/1.9.16...1.9.17
 
-1.9.16 (2026-08-09)
+1.9.16 (2026-10-09)
 -------------------
 
 Includes support for a new "utc" (UTC Day) Time Resolution, intended for layers with circumpolar
