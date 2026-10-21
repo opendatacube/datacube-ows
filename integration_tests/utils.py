@@ -286,7 +286,7 @@ class ODCExtent:
                     top=slice_bbox.top,
                     bottom=slice_bbox.bottom,
                 )
-                vslice_geom = geom_from_bbox(hslice_bbox)
+                vslice_geom = geom_from_bbox(vslice_bbox)
             else:  # if self == self.EDGE_SUBSET_FOR_TIMES:
                 vslice_bbox = BoundingBox(
                     left=slice_bbox.left,
@@ -294,7 +294,7 @@ class ODCExtent:
                     top=slice_bbox.top,
                     bottom=slice_bbox.bottom,
                 )
-                vslice_geom = geom_from_bbox(hslice_bbox)
+                vslice_geom = geom_from_bbox(vslice_bbox)
 
             return vslice_geom
 
