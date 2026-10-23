@@ -7,6 +7,27 @@ History
 
 Datacube-ows version 1.9.x releases are designed to work with datacube-core versions 1.9.x.
 
+1.9.19 (2026-10-23)
+-------------------
+
+Security release for CVE-2026-111943
+
+What's Changed
+--------------
+
+* Prepare for 1.9.19 release by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1737
+
+Automated Updates
+-----------------
+
+* build(deps): bump the actions-deps group with 3 updates by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1732
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1733
+* build(deps): bump astral-sh/uv from 0.13.1 to 0.13.3 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1734
+* build(deps): bump astral-sh/uv from 0.13.3 to 0.13.4 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1735
+* build(deps): bump astral-sh/uv from 0.13.4 to 0.13.5 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1736
+
+
+**Full Changelog**: https://github.com/opendatacube/datacube-ows/compare/1.9.18...1.9.19
 
 1.9.18 (2026-10-16)
 -------------------
