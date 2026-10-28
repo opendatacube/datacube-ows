@@ -1,4 +1,4 @@
-FROM mambaorg/micromamba:2.9.0@sha256:e0a99b0f17a759e14c2f967dc0ca2d3a3c1ca3c62955f4d20bba770eaaf0184d
+FROM mambaorg/micromamba:2.9.0@sha256:7b93def90e48d6d7744938e31c29172e03b19bc9f56f0db512039f18efd21529
 COPY --chown=$MAMBA_USER:$MAMBA_USER env.micromamba.yaml /tmp/env.yaml
 RUN --mount=type=cache,target=/opt/conda/pkgs micromamba install -y -n base -f /tmp/env.yaml && \
     micromamba clean --all --yes --force-pkgs-dirs && \
