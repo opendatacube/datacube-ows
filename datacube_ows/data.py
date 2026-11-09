@@ -301,7 +301,7 @@ def _write_polygon(
     else:
         data = numpy.zeros([geobox.height, geobox.width], dtype="uint8")
         data = rasterize(
-            shapes=[polygon], fill=0, default_value=2, out=data, transform=geobox.affine
+            shapes=[polygon], fill=0, default_value=1, out=data, transform=geobox.affine
         )
     with MemoryFile() as memfile:
         with memfile.open(
