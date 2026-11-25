@@ -10,7 +10,7 @@ dependencies = [
     "affine",
     "antimeridian",
     "click",
-    "datacube[performance,s3]>=1.9.14,<1.10.0",
+    "datacube[performance,s3]>=1.9.23,<1.10.0",
     "deepdiff",
     "fsspec",
     "geoalchemy2",
@@ -24,7 +24,7 @@ dependencies = [
     "requests",
     "scipy",
     "shapely!=2.2.0",  # Shapely 2.2.0 doesn't build with --no-build-packages
-    "SQLAlchemy>2,<2.1",
+    "SQLAlchemy>2",
     "timezonefinder!=6.6.0",
     "urllib3",
     "xarray",
