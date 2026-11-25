@@ -167,7 +167,10 @@ class OWSPostgisIndex(OWSAbstractIndex):
                     st, _ = normalise_to_dtr(st)
                     et, _ = normalise_to_dtr(et)
                     time_args.append(Range(st, et))
-            query["time"] = time_args[0]
+            if layer.time_resolution.is_summary():
+                query["time_lower"] = time_args[0]
+            else:
+                query["time"] = time_args[0]
         return query
 
     @override
