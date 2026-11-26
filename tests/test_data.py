@@ -277,6 +277,50 @@ def test_pbq_ctor_simple(product_layer) -> None:  # noqa: F811
     )
 
 
+def test_pbq_ctor_resource_limited_no_low_res(product_layer) -> None:  # noqa: F811
+    # With no low-res products configured, resource-limited queries must fall back
+    # to the main products (used to draw the zoomed-out extent polygon).
+    product_layer.low_res_products = []
+    pbq = ProductBandQuery.simple_layer_query(
+        product_layer, {"red", "green"}, resource_limited=True
+    )
+    assert list(pbq.products) == product_layer.products
+
+
+@pytest.mark.parametrize(
+    "fill", [[150, 180, 200, 255], [150, 180, 200, 160], [255, 255, 255, 255]]
+)
+def test_write_polygon(fill) -> None:
+    from odc.geo.geobox import GeoBox
+    from rasterio.io import MemoryFile
+
+    gbox = GeoBox.from_bbox((0, 0, 100, 100), crs="EPSG:3857", shape=(10, 10))
+
+    def render(poly) -> np.ndarray:
+        png = datacube_ows.data._write_polygon(gbox, poly, fill, MagicMock())
+        with MemoryFile(png) as mf, mf.open() as ds:
+            return ds.read()
+
+    # Partially covered tile: covered pixels get the exact fill colour, rest is empty.
+    partial = render(
+        polygon([(0, 0), (0, 100), (50, 100), (50, 0), (0, 0)], crs="EPSG:3857")
+    )
+    assert partial.shape == (4, 10, 10)
+    for band, val in zip(partial, fill, strict=True):
+        assert set(np.unique(band)) == {0, val}
+    assert (partial[:, :, :5] == np.array(fill).reshape(4, 1, 1)).all()
+    assert (partial[:, :, 5:] == 0).all()
+
+    # Fully covered tile: every pixel gets the fill colour.
+    full = render(
+        polygon(
+            [(-10, -10), (-10, 110), (110, 110), (110, -10), (-10, -10)],
+            crs="EPSG:3857",
+        )
+    )
+    assert (full == np.array(fill).reshape(4, 1, 1)).all()
+
+
 def test_pbq_ctor_full(product_layer) -> None:  # noqa: F811
     pbqs = ProductBandQuery.full_layer_queries(product_layer)
     assert len(pbqs) == 2
