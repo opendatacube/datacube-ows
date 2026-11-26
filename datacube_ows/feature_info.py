@@ -105,7 +105,10 @@ def _make_band_dict(
             try:
                 flag_dict = mask_to_dict(flag_def, band_val)
             except TypeError:
-                logging.warning("Working around for float bands")
+                logging.warning("Bitflag/value mask on floating point band %s", k)
+                if numpy.isnan(band_val):
+                    band_dict[k] = "n/a"
+                    continue
                 flag_dict = mask_to_dict(flag_def, int(band_val))
             ret_val: dict[str, bool | str] = {}
             for flag, val in flag_dict.items():
