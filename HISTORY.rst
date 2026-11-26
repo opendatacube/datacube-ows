@@ -7,6 +7,42 @@ History
 
 Datacube-ows version 1.9.x releases are designed to work with datacube-core versions 1.9.x.
 
+1.9.20 (2026-11-26)
+-------------------
+
+Adds support for rolling-window summary layers in the postgis driver.
+
+What's Changed
+--------------
+
+* Postgis: fix summary search postgis for rolling-window summary layers by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1757
+* Handle floats in value maps for feature info. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1758
+* Prepare for 1.9.20 release. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1759
+
+Automated Updates
+-----------------
+
+* build(deps): bump github/codeql-action/upload-sarif from 4.38.3 to 4.39.0 in the actions-deps group by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1738
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1739
+* build(deps): bump astral-sh/uv from 0.13.5 to 0.13.6 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1740
+* build(deps): bump mambaorg/micromamba from `e0a99b0` to `7b93def` by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1741
+* build(deps): bump mambaorg/micromamba from 2.9.0 to 2.10.0 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1742
+* build(deps): bump the actions-deps group with 4 updates by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1743
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1744
+* build(deps): bump astral-sh/uv from 0.13.6 to 0.13.7 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1745
+* build(deps): bump astral-sh/setup-uv from 10.3.2 to 10.3.3 in the actions-deps group by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1746
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1747
+* build(deps): bump astral-sh/uv from 0.13.7 to 0.13.8 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1749
+* build(deps): bump tornado from 6.6 to 6.6.1 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1750
+* build(deps): bump the actions-deps group with 3 updates by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1751
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1752
+* build(deps): bump astral-sh/uv from 0.13.8 to 0.13.9 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1753
+* [pre-commit.ci] pre-commit autoupdate by @pre-commit-ci[bot] in https://github.com/opendatacube/datacube-ows/pull/1754
+* build(deps): bump astral-sh/uv from 0.13.9 to 0.13.10 by @dependabot[bot] in https://github.com/opendatacube/datacube-ows/pull/1756
+
+
+**Full Changelog**: https://github.com/opendatacube/datacube-ows/compare/1.9.19...1.9.20
+
 1.9.19 (2026-10-23)
 -------------------
 
