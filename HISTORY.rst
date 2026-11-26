@@ -7,7 +7,7 @@ History
 
 Datacube-ows version 1.9.x releases are designed to work with datacube-core versions 1.9.x.
 
-1.9.20 (2026-10-23)
+1.9.20 (2026-11-26)
 -------------------
 
 Adds support for rolling-window summary layers in the postgis driver.
@@ -16,7 +16,7 @@ What's Changed
 --------------
 
 * Postgis: fix summary search postgis for rolling-window summary layers by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1757
-* Handle floats in value maps for featureinfo. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1758
+* Handle floats in value maps for feature info. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1758
 * Prepare for 1.9.20 release. by @SpacemanPaul in https://github.com/opendatacube/datacube-ows/pull/1759
 
 Automated Updates

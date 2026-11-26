@@ -406,6 +406,7 @@ rtaib
 runtime
 RuntimeError
 runtimes
+sarif
 satisifies
 scalable
 schemas
